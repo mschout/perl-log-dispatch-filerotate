@@ -16,7 +16,7 @@ Params::Validate::validation_options( allow_extra => 1 );
 
 use vars qw[ $VERSION ];
 
-$VERSION = sprintf "%d.%02d", q$Revision: 1.10 $ =~ /: (\d+)\.(\d+)/;
+$VERSION = sprintf "%d.%02d", q$Revision: 1.11 $ =~ /: (\d+)\.(\d+)/;
 
 sub new
 {
@@ -113,12 +113,16 @@ sub setDatePattern
 
 	my %lookup = (
 		#					 Y:M:W:D:H:M:S
-		'yyyy-MM'		=> 	'0:1*0:1:0:0:0',  # Every Month
+		'yyyy-mm'		=> 	'0:1*0:1:0:0:0',  # Every Month
 		'yyyy-ww'		=> 	'0:0:1*0:0:0:0',  # Every week
 		'yyyy-dd'		=> 	'0:0:0:1*0:0:0',  # Every day 
+		'yyyy-mm-dd'	=> 	'0:0:0:1*0:0:0',  # Every day 
 		'yyyy-dd-a'		=> 	'0:0:0:1*12:0:0', # Every day 12noon
-		'yyyy-dd-HH'	=> 	'0:0:0:0:1*0:0',  # Every hour
-		'yyyy-dd-HH-MM'	=> 	'0:0:0:0:0:1*0',  # Every minute
+		'yyyy-mm-dd-a'	=> 	'0:0:0:1*12:0:0', # Every day 12noon
+		'yyyy-dd-hh'	=> 	'0:0:0:0:1*0:0',  # Every hour
+		'yyyy-mm-dd-hh'	=> 	'0:0:0:0:1*0:0',  # Every hour
+		'yyyy-dd-hh-mm'	=> 	'0:0:0:0:0:1*0',  # Every minute
+		'yyyy-mm-dd-hh-mm'	=> 	'0:0:0:0:0:1*0',  # Every minute
 	);
 
 	# Convert arg to array
@@ -133,15 +137,16 @@ sub setDatePattern
 	}
 	else
 	{
-		die "Bad referance type argument ".ref($arg);
+		die "Bad reference type argument ".ref($arg);
 	}
 
 	# Handle (possibly multiple) recurrances
 	foreach my $pat (@pats)
 	{
 		# Convert any log4j patterns across
-		if($pat =~ /^yyyy/) # Then log4j style
+		if($pat =~ /^yyyy/i) # Then log4j style
 		{
+			$pat = lc($pat); # Use lowercase lookup
 			# Default to daily on bad pattern
 			unless(grep($pat eq $_,keys %lookup))
 			{
@@ -564,7 +569,7 @@ with additions. To that end the arguments
 behave the same as Log::Dispatch::File. So see its man page 
 (perldoc Log::Dispatch::File)
 
-The arguments size and max specify the maximum size (in meg) and maximum
+The arguments size and max specify the maximum size and maximum
 number of log files created. The size defaults to 10M and the max number
 of files defaults to 1. If DatePattern is not defined then we default to
 working in size mode. That is, use size values for deciding when to rotate.

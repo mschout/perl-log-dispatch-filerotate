@@ -44,7 +44,7 @@ if($@)
 	}
 	else
 	{
-		print "**** All bets are off. ****\n";
+		print "**** Time Zone problem: All bets are off. ****\n";
 		print "not ok 2\n";
 	}
 	$tz = '';
