@@ -32,4 +32,6 @@ Revision history for Perl extension Log::Dispatch::FileRotate.
 	- Even better testing of TZ issues. Try to see if we can work around
 	  them by ignoring and then testing results.
 
-
+1.10 Mon Jun 23 09:40:34 EST 2003
+	- Seems defaulting to size in Megs happened between 1.05 and 1.06
+	  which is not what people want. So back to bytes now.

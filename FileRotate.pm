@@ -16,7 +16,7 @@ Params::Validate::validation_options( allow_extra => 1 );
 
 use vars qw[ $VERSION ];
 
-$VERSION = sprintf "%d.%02d", q$Revision: 1.09 $ =~ /: (\d+)\.(\d+)/;
+$VERSION = sprintf "%d.%02d", q$Revision: 1.10 $ =~ /: (\d+)\.(\d+)/;
 
 sub new
 {
@@ -40,7 +40,7 @@ sub new
 	# Size defaults to 10meg in all failure modes, hopefully
 	my $ten_meg = 1024*1024*10;
 	my $two_gig = 1024*1024*1024*2;
-	my $size = $p{size} *1024*1024; # Size in megs
+	my $size = $p{size};
 	$size = $ten_meg unless $size =~ /^\d+$/ && $size < $two_gig && $size > 0;
 	$self->{size} = $size;
 
