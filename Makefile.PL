@@ -7,5 +7,11 @@ WriteMakefile(
     'PREREQ_PM'		=> {}, # e.g., Module::Name => 1.1
 	'ABSTRACT_FROM' => 'FileRotate.pm',
 	'AUTHOR'        => '"Mark Pfeiffer" <markpf@mlp-consulting.com.au>',
-	'clean'         => {FILES => "*.log*"}
+	'clean'         => {FILES => "*.log*"},
+	 PREREQ_PM   => {
+			'Log::Log4perl'	=> '0.23', # or a minimum workable version
+			'Log::Dispatch::Output' => 0,
+			'Params::Validate' => 0,
+			'Fcntl'         => 0,
+    }
 );

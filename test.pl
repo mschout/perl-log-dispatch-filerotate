@@ -6,7 +6,7 @@
 # Change 1..1 below to 1..last_test_to_print .
 # (It may become useful if the test is moved to ./t subdirectory.)
 
-BEGIN { $| = 1; print "1..1000\n"; }
+BEGIN { $| = 1; print "1..4\n"; }
 END {print "not ok 1\n" unless $loaded;}
 use Log::Log4perl;
 use Log::Dispatch::FileRotate;
@@ -25,18 +25,29 @@ print "ok 2\n";
 my $logger = Log::Log4perl->get_logger('nms.cisco.utility');
 my $logger1 = Log::Log4perl->get_logger('nms');
 
-print "ok 3\n";
+print "ok 3\n\n";
+
+print "while true; do clear;ls -ltr| grep myerrs; sleep 1; done\n\n";
+print "Type this in another xterm in this directory to see the logs
+changing. You can also edit log.conf and change params to see what will
+happen to the log files.
+
+You can also run a number of 'make test' commands to see how we behave
+with multiple writers to log files.
+
+Running long test please stand by:\n";
 
 my $i = 4;
-while ($i <= 1000 )
+while ($i <= 10000 )
 {
- $logger->debug('this is a debug message');
- $logger->info('this is an info message');
- $logger->warn('etc');
- $logger->error('..');
- $logger->fatal('..');
+ $logger->debug($$ . ' this is a debug message');
+ $logger->info($$  . ' this is an info message');
+ $logger->warn($$  . ' etc');
+ $logger->error($$ . ' ..');
+ $logger->fatal($$ . ' ..');
 
- $logger1->info('this is an info message via logger1');
- print "ok $i\n";
+ $logger1->info($$ . ' this is an info message via logger1');
  $i++;
 }
+print "ok 4\n";
+

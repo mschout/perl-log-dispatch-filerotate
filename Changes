@@ -7,4 +7,5 @@ Revision history for Perl extension Log::Dispatch::FileRotate.
 1.01 Tue Oct  1 01:21:54 EST 2002
 	- Real code copied over h2xs stuff.
 
-
+1.03 Mon Nov 18 17:19:06 EST 2002
+	- added multiple writer stuff. Use flock() to handle locks

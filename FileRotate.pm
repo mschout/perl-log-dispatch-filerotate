@@ -14,7 +14,7 @@ Params::Validate::validation_options( allow_extra => 1 );
 
 use vars qw[ $VERSION ];
 
-$VERSION = sprintf "%d.%02d", q$Revision: 1.02 $ =~ /: (\d+)\.(\d+)/;
+$VERSION = sprintf "%d.%02d", q$Revision: 1.03 $ =~ /: (\d+)\.(\d+)/;
 
 sub new
 {
@@ -25,6 +25,7 @@ sub new
 
     my $self = bless {}, $class;
 
+	$self->{'debug'} = 0;
     $self->_basic_init(%p);
     $self->{'LDF'} =  Log::Dispatch::File->new(%p);  # Our log
 
@@ -43,6 +44,18 @@ sub new
 	$self->{max}  = $p{max};
 	$self->{max}  = 1 unless $self->{max} =~ /^\d+$/ && $self->{max} ;
 
+	# Get access to our Lock file
+	my $lfh = do {local *LFH; *LFH;};
+	my $name = $self->{params}->{filename};
+	my ($dir,$f) = $name =~ m{^(.*/)(.*)$};
+	$f = $name unless $f;
+
+	my $lockfile = $dir.".".$f.".LCK";
+	warn "Lock file is $lockfile\n" if $self->{'debug'};
+	open $lfh ,">>$lockfile" or die "Can't open $lockfile for locking: $!";
+	$self->{lfh} = $lfh;
+	$self->{'lf'} = $lockfile;
+
     return $self;
 }
 
@@ -54,36 +67,70 @@ sub log_message
 	my $max_size = $self->{size};
 	my $numfiles = $self->{max};
 	my $name     = $self->{params}->{filename};
+	my $fh       = $self->{LDF}->{fh};
 
-	my $size = (stat($name))[7];
-	if(defined($size) && $size < $max_size)
+	# Handle critical code for logging. No changes if someone else is in
+	if( !$self->lfhlock_test() )
 	{
-		$self->{LDF}->log_message(message => $p{message});
-		return;
+		warn "$$ waiting on lock\n" if $self->{debug};
+		$self->lfhlock() || die "Can't get a lock";
 	}
+
+	my $size = (stat($fh))[7]; # Stat the handle not the name to get real size
+	my $inode = (stat($fh))[1]; # Stat the handle not the name to get real inode
+	my $finode = (stat($name))[1]; # Stat the name for comparision
+
+	# If finode and inode are the same then nobody has done a rename
+	# under us and we can continue. Otherwise just close and reopen.
+	warn localtime() . " $$  s=$size, i=$inode, f=$finode, n=$name\n" if $self->{debug};
+
+	if(defined($size) && $size < $max_size && $inode == $finode)
+	{
+		$self->logit($p{message});
+	}
+	elsif($inode != $finode)
+	{
+		# Oops someone moved things on us. So just reopen our log
+		delete $self->{LDF};  # Should get rid of current LDF
+		$self->{LDF} =  Log::Dispatch::File->new(%{$self->{params}});  # Our log
+
+		$self->logit($p{message});
+	}
+	# Need to rotate
 	elsif($size)
 	{
 		# Shut down the log
 		delete $self->{LDF};  # Should get rid of current LDF
 
 		my $idx = $numfiles -1;
-		# We use rename as we aren't moving across file systems
+
+		warn localtime() . " $$ Rotating\n" if $self->{debug};
 		while($idx >= 0)
 		{
 			if($idx <= 0)
 			{
+				warn "$$ rename $name $name.1\n" if $self->{debug};
 				rename($name, "$name.1");
 			}
 			else
 			{
+				warn "$$ rename $name.$idx $name.".($idx+1)."\n" if $self->{debug};
 				rename("$name.$idx", "$name.".($idx+1));
 			}
 
 			$idx--;
 		}
+		warn localtime() . " $$ Rotating Done\n" if $self->{debug}; 
+
+		# reopen the logfile for writing.
 		$self->{LDF} =  Log::Dispatch::File->new(%{$self->{params}});  # Our log
+
+		# Write it out
+		$self->logit($p{message});
 	}
 	#else size is zero :-} just don't do anything!
+
+	$self->lfhunlock();
 }
 
 sub DESTROY
@@ -94,7 +141,72 @@ sub DESTROY
     {
 		delete $self->{LDF};  # Should get rid of current LDF
     }
+
+	# Clean up locks
+	close $self->{lfh};
+	unlink $self->{lf};
 }
+
+sub logit
+{
+	my $self = $_[0];
+
+	$self->lock();
+	$self->{LDF}->log_message(message => $_[1]);
+	$self->unlock();
+	return;
+}
+
+# Lock and unlock routines. For when we need to write a message.
+use Fcntl ':flock'; # import LOCK_* constants
+
+sub lock 
+{
+   my $self = shift;
+   flock($self->{LFD}->{fh},LOCK_EX);
+
+   # Make sure we are at the EOF
+   seek($self->{LDF}->{fh}, 0, 2);
+
+   warn localtime() ." $$ Locked\n" if $self->{debug};
+   return;
+}
+
+sub unlock 
+{
+   my $self = shift;
+   flock($self->{LFD}->{fh},LOCK_UN);
+   warn localtime() . " $$ unLocked\n" if $self->{debug};
+}
+
+# Lock and unlock routines. For when we need to roll the logs.
+sub lfhlock_test 
+{
+   my $self = shift;
+   if (flock($self->{lfh},LOCK_EX | LOCK_NB))
+   {
+		warn "$$ got lock on Lock File ".$self->{lfh}."\n" if $self->{debug};
+   		return 1;
+   }
+   else
+   {
+		warn "$$ couldn't get lock on Lock File\n" if $self->{debug};
+	   return 0;
+   }
+}
+
+sub lfhlock
+{
+   my $self = shift;
+   flock($self->{lfh},LOCK_EX);
+}
+
+sub lfhunlock 
+{
+   my $self = shift;
+   flock($self->{lfh},LOCK_UN);
+}
+
 
 __END__
 
@@ -133,6 +245,8 @@ number of log files created. The size defaults to 10M and the max number
 of files defaults to 1.
 
 Later I'll provide time based constaints as well.
+
+We handle multiple writers using flock().
 
 =head1 METHODS
 
@@ -209,10 +323,15 @@ be called directly but should be called through the C<log()> method
 
 compression, time based rotates, signal based rotates, proper test suite
 
+Could possibly use Logfile::Rotate as well/instead.
+
 =head1 AUTHOR
 
 Mark Pfeiffer, <markpf@mlp-consulting.com.au> inspired by
 Dave Rolsky's, <autarch@urth.org>, code :-)
+
+Kevin Goess <kevin@goess.org> suggested multiple writers should be
+supported. Thanks Kevin.
 
 =cut
 
