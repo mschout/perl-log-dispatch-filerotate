@@ -38,7 +38,7 @@ with multiple writers to log files.
 Running long test please stand by:\n";
 
 my $i = 4;
-while ($i <= 10000 )
+while ($i <= 180 )
 {
  $logger->debug($$ . ' this is a debug message');
  $logger->info($$  . ' this is an info message');
@@ -48,6 +48,7 @@ while ($i <= 10000 )
 
  $logger1->info($$ . ' this is an info message via logger1');
  $i++;
+ sleep 1;
 }
 print "ok 4\n";
 

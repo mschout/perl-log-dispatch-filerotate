@@ -11,6 +11,7 @@ WriteMakefile(
 	 PREREQ_PM   => {
 			'Log::Log4perl'	=> '0.23', # or a minimum workable version
 			'Log::Dispatch::Output' => 0,
+			'Date::Manip'      => 0,
 			'Params::Validate' => 0,
 			'Fcntl'         => 0,
     }
