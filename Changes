@@ -23,3 +23,8 @@ Revision history for Perl extension Log::Dispatch::FileRotate.
 	- fixed up locking in a forked environment
 	- speed up in time mode. Cache recurrences. Much quicker now :-)
 
+1.08 Thu Jun  5 11:27:49 EST 2003
+	- now build log.conf at 'make test' time as we keep having people
+	  fail due to bad TZ settings
+	- Also added some more testing on the recurrances
+

@@ -21,6 +21,40 @@ print "ok 1\n";
 # (correspondingly "not ok 13") depending on the success of chunk 13
 # of the test code):
 
+# First lets build a conf file for use latter
+use Date::Manip;
+my $tz= Date_TimeZone();
+print "Your timezone is $tz.\n";
+
+my $config = <<EOT;
+
+log4j.rootLogger=DEBUG, FILE
+log4j.logger.nms=DEBUG, FILE
+
+log4j.appender.S=Log::Dispatch::Screen
+#log4j.appender.S.Threshold=FATAL
+log4j.appender.S.layout=org.apache.log4j.PatternLayout
+log4j.appender.S.layout.ConversionPattern=%d %F %-4L %-5p %c - %m%n
+
+#log4j.appender.FILE.DEBUG=1
+log4j.appender.FILE=Log::Dispatch::FileRotate
+log4j.appender.FILE.filename=myerrs.log
+log4j.appender.FILE.mode=append
+log4j.appender.FILE.size=20000
+#log4j.appender.FILE.TZ=EADT
+log4j.appender.FILE.TZ=$tz
+#recurrance dates - Every Hour and Every 1mins and 1st day 4th hr of every week
+log4j.appender.FILE.DatePattern=yyyy-dd-HH; 0:0:0:0:0:1*0; 0:0:1*1:4:0:0
+log4j.appender.FILE.max=5
+log4j.appender.FILE.layout=org.apache.log4j.PatternLayout
+log4j.appender.FILE.layout.ConversionPattern=%d %F %-4L %-5p %c - %m%n
+
+EOT
+
+open(CONF, "> log.conf") || die "Can't create log.conf";
+print CONF $config;
+close(CONF);
+
 Log::Log4perl::init_and_watch("log.conf",10);
 print "ok 2\n";
 

@@ -16,7 +16,7 @@ Params::Validate::validation_options( allow_extra => 1 );
 
 use vars qw[ $VERSION ];
 
-$VERSION = sprintf "%d.%02d", q$Revision: 1.07 $ =~ /: (\d+)\.(\d+)/;
+$VERSION = sprintf "%d.%02d", q$Revision: 1.08 $ =~ /: (\d+)\.(\d+)/;
 
 sub new
 {
@@ -300,7 +300,7 @@ sub time_to_rotate
 	{
 		# Then do some checking and update ourselves if we think we need
 		# to rotate. Wether we rotate or not is up to our caller. We
-		# assume they know what their doing!
+		# assume they know what they are doing!
 
 		# Check need for rotation. Loop through our recurrances looking
 		# for expiration times. Any we find that have expired we update.
@@ -310,15 +310,27 @@ sub time_to_rotate
 		for my $rec (@recur)
 		{
 			my ($abs,$pat) = @$rec;
+
+			# Extra checking
+			unless(defined $abs && $abs)
+			{
+				warn "Bad time found for recurrance pattern $pat: $abs\n";
+				next;
+			}
 			my $dorotate = 0;
 			if($abs <= $tm)
 			{
 				# Then we need to rotate
 				$abs = $self->_get_next_occurance($pat);
+				unless(defined $abs && $abs)
+				{
+					warn "Next occurance is null for $pat\n";
+					$abs = 0;
+				}
 				$rotate++;
 				$dorotate++;  # Just for debugging
 			}
-			push(@{$self->{'recurrance'}},[$abs,$pat]);
+			push(@{$self->{'recurrance'}},[$abs,$pat]) if $abs;
 			my $next = localtime($abs);
 			warn "time_to_rotate(mode,rotate,next) => ($mode,$dorotate,$next)\n" if $self->{debug};
 		}
@@ -387,9 +399,14 @@ sub _gen_occurance
 	}
 
 	my @epochs = map {UnixDate($_,'%s')} @dates;
-	shift(@epochs) while $epochs[0] <= time();
 
-	warn "Epochs are at: @epochs\n" if $self->{debug};
+	# Clean out epochs that occur before now, being careful not to loop
+	# forever (thanks James).
+	shift(@epochs) while @epochs && $epochs[0] <= time();
+
+	warn "Recurrances are at: @epochs\n" if $self->{debug};
+	warn "No recurrances found! Probably a timezone issue!\n" unless @epochs;
+
 	return @epochs;
 }
 
@@ -408,7 +425,7 @@ sub _get_next_occurance
     my $self = shift;        # My object
     my $pat  = shift;
 
-	# If this is first time of we are close to the end of our current
+	# If this is first time or we are close to the end of our current
 	# list of recurrances then generate some new ones
 	if(!defined $self->{'epochs'}{$pat} || scalar(@{$self->{'epochs'}{$pat}}) < 2)
 	{
