@@ -1,0 +1,11 @@
+use ExtUtils::MakeMaker;
+# See lib/ExtUtils/MakeMaker.pm for details of how to influence
+# the contents of the Makefile that is written.
+WriteMakefile(
+    'NAME'		=> 'Log::Dispatch::FileRotate',
+    'VERSION_FROM'	=> 'FileRotate.pm', # finds $VERSION
+    'PREREQ_PM'		=> {}, # e.g., Module::Name => 1.1
+	'ABSTRACT_FROM' => 'FileRotate.pm',
+	'AUTHOR'        => '"Mark Pfeiffer" <markpf@mlp-consulting.com.au>',
+	'clean'         => {FILES => "*.log*"}
+);

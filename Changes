@@ -1,0 +1,10 @@
+Revision history for Perl extension Log::Dispatch::FileRotate.
+
+0.01  Tue Oct  1 01:12:30 2002
+	- original version; created by h2xs 1.20 with options
+		-AX -n Log::Dispatch::FileRotate
+
+1.01 Tue Oct  1 01:21:54 EST 2002
+	- Real code copied over h2xs stuff.
+
+

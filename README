@@ -1,0 +1,43 @@
+Log::Dispatch::FileRotate - Log to files that archive/rotate themselves
+
+SYNOPSIS
+
+  use Log::Dispatch::FileRotate;
+
+  my $file = Log::Dispatch::FileRotate->new( name      => 'file1',
+                                       min_level => 'info',
+                                       filename  => 'Somefile.log',
+                                       mode      => 'append' ,
+                                       size      => 10,
+                                       max       => 6,
+                                      );
+
+  $file->log( level => 'info', message => "your comment\n" );
+
+DESCRIPTION
+
+This module provides a simple object for logging to files under the
+Log::Dispatch::* system, and automatically rotating them according to
+different constraints. This is basically a Log::Dispatch::File wrapper
+with additions. To that end the arguments
+
+	name, min_level, filename and  mode
+
+behave the same as Log::Dispatch::File. So see its man page 
+(perldoc Log::Dispatch::File)
+
+The arguments size and max specify the maximum size (in meg) and maximum
+number of log files created. The size defaults to 10M and the max number
+of files defaults to 1.
+
+Later I'll provide time based constaints as well.
+
+TODO
+
+compression, time based rotates, signal based rotates, proper test suite
+
+AUTHOR
+
+Mark Pfeiffer, <markpf@mlp-consulting.com.au> inspired by
+Dave Rolsky's, <autarch@urth.org>, code :-)
+
