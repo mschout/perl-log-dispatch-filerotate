@@ -1,0 +1,14 @@
+#XXXXXXX This is a prototype!!!  It will change in the future!!! XXXXX#
+name:         Log-Dispatch-FileRotate
+version:      1.13
+version_from: FileRotate.pm
+installdirs:  site
+requires:
+    Log::Dispatch::Output:         0
+    Log::Log4perl:                 0.23
+    Fcntl:                         0
+    Params::Validate:              0
+    Date::Manip:                   0
+
+distribution_type: module
+generated_by: ExtUtils::MakeMaker version 6.12

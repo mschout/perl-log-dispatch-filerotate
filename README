@@ -221,11 +221,6 @@ TODO
 
     Could possibly use Logfile::Rotate as well/instead.
 
-AUTHOR
-    Mark Pfeiffer, <markpf@mlp-consulting.com.au> inspired by Dave Rolsky's,
-    <autarch@urth.org>, code :-)
-
-    Kevin Goess <kevin@goess.org> suggested multiple writers should be
-    supported. He also conned me into doing the time based stuff. Thanks
-    Kevin! :-)
+PRINCIPLE AUTHOR
+    Mark Pfeiffer 
 

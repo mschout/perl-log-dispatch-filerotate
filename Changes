@@ -40,3 +40,21 @@ Revision history for Perl extension Log::Dispatch::FileRotate.
 	- Forgot to update the Doco from 1.10. 
 	- Added some missing log4j recurrence patterns and made them
 	  case insensitive
+
+1.12 Mon Feb 28 23:20:03 EST 2005
+	- Added code to handle short running proggies like CGIs that want to
+	  use the DatePattern stuff. Now check mtime of log file to see if we
+	  need to rotate (at start up only).
+	- Got rid of epochs as they conflict with Date::Manip's UnixDate()
+	  function on MacOSX. This slows us down quite a bit so I am using
+	  cmp instead of Date_Cmp() to get some speed back.
+	- Fixed up some typos and removed some email addresses as requested.
+	- Not released
+
+1.13 Tue Mar  1 12:04:13 EST 2005
+	- Went back to epoch times for comparisions. My comments above
+	  regarding Date::Manip and MacOSX are silly.
+	- Added better lockfile name picking thanks to Stephen Gordon
+	- Removed the $$ from the lockfile name as it makes it too uniq
+
+

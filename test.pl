@@ -73,10 +73,13 @@ log4j.appender.FILE=Log::Dispatch::FileRotate
 log4j.appender.FILE.filename=myerrs.log
 log4j.appender.FILE.mode=append
 log4j.appender.FILE.size=20000
+# This is my timezone in Aus
 #log4j.appender.FILE.TZ=EADT
+# This is hopefully your timezone
 $tz
-#recurrance dates - Every Hour and Every 1mins and 1st day 4th hr of every week
-log4j.appender.FILE.DatePattern=yyyy-dd-HH; 0:0:0:0:0:1*0; 0:0:1*1:4:0:0
+#recurrance dates - Every Hour and Every 10mins and 1st day 4th hr of every week
+log4j.appender.FILE.DatePattern=yyyy-dd-HH; 0:0:0:0:0:10*0; 0:0:1*1:4:0:0
+#log4j.appender.FILE.DatePattern=yyyy-dd-HH
 log4j.appender.FILE.max=5
 log4j.appender.FILE.layout=org.apache.log4j.PatternLayout
 log4j.appender.FILE.layout.ConversionPattern=%d %F %-4L %-5p %c - %m%n
@@ -118,7 +121,7 @@ while ($i <= 65 )
 
  $logger1->info($$ . ' this is an info message via logger1');
  $i++;
-# sleep 1;
+ #sleep 1;
  print ".";
 }
 print "\n";
