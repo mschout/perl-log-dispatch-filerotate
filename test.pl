@@ -8,7 +8,7 @@
 # Change 1..1 below to 1..last_test_to_print .
 # (It may become useful if the test is moved to ./t subdirectory.)
 
-BEGIN { $| = 1; print "1..4\n"; }
+BEGIN { $| = 1; print "1..5\n"; }
 END {print "not ok 1\n" unless $loaded;}
 use Log::Log4perl;
 use Log::Dispatch::FileRotate;
@@ -23,8 +23,40 @@ print "ok 1\n";
 
 # First lets build a conf file for use latter
 use Date::Manip;
-my $tz= Date_TimeZone();
-print "Your timezone is $tz.\n";
+my $tz;
+eval '$tz= Date_TimeZone();';
+if($@)
+{
+	#print "ERROR Unable to determine timezone! Lets see if it matters..\n";
+	my $start = DateCalc("now","+ 1 second");
+	my @dates = ParseRecur('0:0:0:0:0:1*0',"now",$start,'20 minutes later');
+
+	# Should get about 20 in the array
+	my @epochs = map {UnixDate($_,'%s')} @dates;
+	shift(@epochs) while @epochs && $epochs[0] <= time();
+
+	# If no epochs left then Timezone issue is going to bite us!
+	# all bets are off.
+	if( @epochs )
+	{
+		#print "It looks like we can get by without a timezone. Lucky!\n";
+		print "ok 2\n";
+	}
+	else
+	{
+		print "**** All bets are off. ****\n";
+		print "not ok 2\n";
+	}
+	$tz = '';
+
+}
+else
+{
+	#print "Your timezone is $tz.\n";
+	$tz = "log4j.appender.FILE.TZ=$tz";
+	print "ok 2\n";
+}
+
 
 my $config = <<EOT;
 
@@ -42,7 +74,7 @@ log4j.appender.FILE.filename=myerrs.log
 log4j.appender.FILE.mode=append
 log4j.appender.FILE.size=20000
 #log4j.appender.FILE.TZ=EADT
-log4j.appender.FILE.TZ=$tz
+$tz
 #recurrance dates - Every Hour and Every 1mins and 1st day 4th hr of every week
 log4j.appender.FILE.DatePattern=yyyy-dd-HH; 0:0:0:0:0:1*0; 0:0:1*1:4:0:0
 log4j.appender.FILE.max=5
@@ -56,12 +88,12 @@ print CONF $config;
 close(CONF);
 
 Log::Log4perl::init_and_watch("log.conf",10);
-print "ok 2\n";
+print "ok 3\n";
 
 my $logger = Log::Log4perl->get_logger('nms.cisco.utility');
 my $logger1 = Log::Log4perl->get_logger('nms');
 
-print "ok 3\n\n";
+print "ok 4\n\n";
 
 print "while true; do clear;ls -ltr| grep myerrs; sleep 1; done\n\n";
 print "Type this in another xterm in this directory to see the logs
@@ -90,5 +122,5 @@ while ($i <= 65 )
  print ".";
 }
 print "\n";
-print "ok 4\n";
+print "ok 5\n";
 

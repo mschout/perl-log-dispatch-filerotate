@@ -28,3 +28,8 @@ Revision history for Perl extension Log::Dispatch::FileRotate.
 	  fail due to bad TZ settings
 	- Also added some more testing on the recurrances
 
+1.09 Thu Jun  5 17:57:46 EST 2003
+	- Even better testing of TZ issues. Try to see if we can work around
+	  them by ignoring and then testing results.
+
+
