@@ -16,7 +16,7 @@ Params::Validate::validation_options( allow_extra => 1 );
 
 use vars qw[ $VERSION ];
 
-$VERSION = sprintf "%d.%02d", q$Revision: 1.04 $ =~ /: (\d+)\.(\d+)/;
+$VERSION = sprintf "%d.%02d", q$Revision: 1.05 $ =~ /: (\d+)\.(\d+)/;
 
 sub new
 {
@@ -402,7 +402,7 @@ use Fcntl ':flock'; # import LOCK_* constants
 sub lock 
 {
    my $self = shift;
-   flock($self->{LFD}->{fh},LOCK_EX);
+   flock($self->{LDF}->{fh},LOCK_EX);
 
    # Make sure we are at the EOF
    seek($self->{LDF}->{fh}, 0, 2);
@@ -414,7 +414,7 @@ sub lock
 sub unlock 
 {
    my $self = shift;
-   flock($self->{LFD}->{fh},LOCK_UN);
+   flock($self->{LDF}->{fh},LOCK_UN);
    warn localtime() . " $$ unLocked\n" if $self->{debug};
 }
 
