@@ -37,10 +37,12 @@ happen to the log files.
 You can also run a number of 'make test' commands to see how we behave
 with multiple writers to log files.
 
-Running long test please stand by:\n";
+Edit test.pl and uncomment the 'sleep 1' line if you want to
+see time rotation happening
+";
 
 my $i = 4;
-while ($i <= 180 )
+while ($i <= 65 )
 {
  $logger->debug($$ . ' this is a debug message');
  $logger->info($$  . ' this is an info message');
@@ -50,7 +52,9 @@ while ($i <= 180 )
 
  $logger1->info($$ . ' this is an info message via logger1');
  $i++;
- sleep 1;
+# sleep 1;
+ print ".";
 }
+print "\n";
 print "ok 4\n";
 

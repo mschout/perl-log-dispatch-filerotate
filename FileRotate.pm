@@ -16,7 +16,7 @@ Params::Validate::validation_options( allow_extra => 1 );
 
 use vars qw[ $VERSION ];
 
-$VERSION = sprintf "%d.%02d", q$Revision: 1.05 $ =~ /: (\d+)\.(\d+)/;
+$VERSION = sprintf "%d.%02d", q$Revision: 1.07 $ =~ /: (\d+)\.(\d+)/;
 
 sub new
 {
@@ -40,7 +40,7 @@ sub new
 	# Size defaults to 10meg in all failure modes, hopefully
 	my $ten_meg = 1024*1024*10;
 	my $two_gig = 1024*1024*1024*2;
-	my $size = $p{size};
+	my $size = $p{size} *1024*1024; # Size in megs
 	$size = $ten_meg unless $size =~ /^\d+$/ && $size < $two_gig && $size > 0;
 	$self->{size} = $size;
 
@@ -49,16 +49,14 @@ sub new
 	$self->{max}  = $p{max};
 	$self->{max}  = 1 unless $self->{max} =~ /^\d+$/ && $self->{max} ;
 
-	# Get access to our Lock file
-	my $lfh = do {local *LFH; *LFH;};
+	# Get a name for our Lock file
 	my $name = $self->{params}->{filename};
 	my ($dir,$f) = $name =~ m{^(.*/)(.*)$};
 	$f = $name unless $f;
+	$dir = './' unless $dir;
 
-	my $lockfile = $dir.".".$f.".LCK";
+	my $lockfile = $dir.".".$f.".LCK.$$";
 	warn "Lock file is $lockfile\n" if $self->{'debug'};
-	open $lfh ,">>$lockfile" or die "Can't open $lockfile for locking: $!";
-	$self->{lfh} = $lfh;
 	$self->{'lf'} = $lockfile;
 
 	# Have we been called with a time based rotation pattern then setup
@@ -180,7 +178,7 @@ sub log_message
 	if( !$self->lfhlock_test() )
 	{
 		warn "$$ waiting on lock\n" if $self->{debug};
-		$self->lfhlock() || die "Can't get a lock";
+		$self->lfhlock() || return;
 	}
 
 	my $size   = (stat($fh))[7];   # Stat the handle to get real size
@@ -191,25 +189,23 @@ sub log_message
 	# If finode and inode are the same then nobody has done a rename
 	# under us and we can continue. Otherwise just close and reopen.
 	# Time mode overrides Size mode
-	if($in_time_mode && !$time_to_rotate && $inode == $finode)
-	{
-		warn localtime()." $$ In time mode: normal log\n" if $self->{debug};
-		$self->logit($p{message});
-	}
-	elsif(!$in_time_mode && 
-	      defined($size) && $size < $max_size && $inode == $finode
-		  )
-	{
-		warn localtime()." $$ In size mode: normal log\n" if $self->{debug};
-		$self->logit($p{message});
-	}
-	elsif($inode != $finode)
+	if(!defined($finode) || $inode != $finode)
 	{
 		# Oops someone moved things on us. So just reopen our log
 		delete $self->{LDF};  # Should get rid of current LDF
 		$self->{LDF} =  Log::Dispatch::File->new(%{$self->{params}});  # Our log
 
 		warn localtime()." $$ Someone else rotated: normal log\n" if $self->{debug};
+		$self->logit($p{message});
+	}
+	elsif($in_time_mode && !$time_to_rotate)
+	{
+		warn localtime()." $$ In time mode: normal log\n" if $self->{debug};
+		$self->logit($p{message});
+	}
+	elsif(!$in_time_mode && defined($size) && $size < $max_size )
+	{
+		warn localtime()." $$ In size mode: normal log\n" if $self->{debug};
 		$self->logit($p{message});
 	}
 	# Need to rotate
@@ -262,8 +258,8 @@ sub DESTROY
     }
 
 	# Clean up locks
-	close $self->{lfh};
-	unlink $self->{lf};
+	close $self->{lfh} if $self->{lfh};
+ 	unlink $self->{lf} if -f $self->{lf};
 }
 
 sub logit
@@ -335,43 +331,43 @@ sub time_to_rotate
 
 ###########################################################################
 #
-# Subroutine _get_next_occurance
+# Subroutine _gen_occurance
 #       
 #       Args: Date::Manip occurance pattern
 #
-#       Rtns: epoch seconds for next event
+#       Rtns: array of epoch seconds for next few events
 #
-sub _get_next_occurance
+sub _gen_occurance
 {
     my $self = shift;        # My object
-    my($pat) = shift;
+    my $pat  = shift;
 	my $range = '';
 
 	if($pat =~ /^0:0:0:0:0/) # Small recurrance less than 1 hour
 	{
-		$range = "2 hours later";
+		$range = "4 hours later";
 	}
 	elsif($pat =~ /^0:0:0:0/) # recurrance less than 1 day
 	{
-		$range = "2 days later";
+		$range = "4 days later";
 	}
 	elsif($pat =~ /^0:0:0:/) #  recurrance less than 1 week
 	{
-		$range = "2 weeks later";
+		$range = "4 weeks later";
 	}
 	elsif($pat =~ /^0:0:/) #  recurrance less than 1 month
 	{
-		$range = "2 months later";
+		$range = "4 months later";
 	}
 	elsif($pat =~ /^0:/) #  recurrance less than 1 year
 	{
-		$range = "12 months later";
+		$range = "24 months later";
 	}
 	else # years
 	{
 		my($yrs) = m/^(\d+):/;
 		$yrs = 1 unless $yrs;
-		my $months = $yrs * 2 * 12;
+		my $months = $yrs * 4 * 12;
 
 		$range = "$months months later";
 	}
@@ -390,60 +386,119 @@ sub _get_next_occurance
 		@dates = ParseRecur('0:0:0:1*0:0:0',"now","now","1 months later");
 	}
 
-	die "bummer in Interval calc" unless defined $dates[0];
+	my @epochs = map {UnixDate($_,'%s')} @dates;
+	shift(@epochs) while $epochs[0] <= time();
 
-	warn "Next date =>".$dates[0]."\n" if $self->{debug};
-	return UnixDate($dates[0],'%s');
+	warn "Epochs are at: @epochs\n" if $self->{debug};
+	return @epochs;
 }
+
+###########################################################################
+#
+# Subroutine _get_next_occurance
+#       
+#       Args: Date::Manip occurance pattern
+#
+#       Rtns: epoch seconds for next event
+#
+# We don't want to call Date::Manip::ParseRecur too often as it is very
+# expensive. So, we cache what is returned from _gen_occurance().
+sub _get_next_occurance
+{
+    my $self = shift;        # My object
+    my $pat  = shift;
+
+	# If this is first time of we are close to the end of our current
+	# list of recurrances then generate some new ones
+	if(!defined $self->{'epochs'}{$pat} || scalar(@{$self->{'epochs'}{$pat}}) < 2)
+	{
+		@{$self->{'epochs'}{$pat}} = $self->_gen_occurance($pat);
+	}
+	
+	return( shift(@{$self->{'epochs'}{$pat}}) );
+}
+
 
 # Lock and unlock routines. For when we need to write a message.
 use Fcntl ':flock'; # import LOCK_* constants
 
 sub lock 
 {
-   my $self = shift;
-   flock($self->{LDF}->{fh},LOCK_EX);
+	my $self = shift;
 
-   # Make sure we are at the EOF
-   seek($self->{LDF}->{fh}, 0, 2);
+	flock($self->{LDF}->{fh},LOCK_EX);
 
-   warn localtime() ." $$ Locked\n" if $self->{debug};
-   return;
+	# Make sure we are at the EOF
+	seek($self->{LDF}->{fh}, 0, 2);
+
+	warn localtime() ." $$ Locked\n" if $self->{debug};
+	return;
 }
 
 sub unlock 
 {
-   my $self = shift;
-   flock($self->{LDF}->{fh},LOCK_UN);
-   warn localtime() . " $$ unLocked\n" if $self->{debug};
+	my $self = shift;
+	flock($self->{LDF}->{fh},LOCK_UN);
+	warn localtime() . " $$ unLocked\n" if $self->{debug};
 }
 
 # Lock and unlock routines. For when we need to roll the logs.
+#
+# Note: On May 1, Dan Waldheim's good news was:
+# I discovered something interesting about forked processes and locking.
+# If the parent "open"s the filehandle and then forks, exclusive locks
+# don't work properly between the parent and children.  Anyone can grab a
+# lock while someone else thinks they have it.  To work properly the
+# "open" has to be done within each process.
+#
+# Thanks Dan
 sub lfhlock_test 
 {
-   my $self = shift;
-   if (flock($self->{lfh},LOCK_EX | LOCK_NB))
-   {
-		warn "$$ got lock on Lock File ".$self->{lfh}."\n" if $self->{debug};
-   		return 1;
-   }
-   else
-   {
+	my $self = shift;
+
+	if (open(LFH, ">>$self->{lf}"))
+	{
+		$self->{lfh} = *LFH;
+		if (flock($self->{lfh}, LOCK_EX | LOCK_NB))
+		{
+			warn "$$ got lock on Lock File ".$self->{lfh}."\n" if $self->{debug};
+			return 1;
+		}
+	}
+	else
+	{
+		$self->{lfh} = 0;
 		warn "$$ couldn't get lock on Lock File\n" if $self->{debug};
-	   return 0;
-   }
+		return 0;
+	}
 }
 
 sub lfhlock
 {
-   my $self = shift;
-   flock($self->{lfh},LOCK_EX);
+	my $self = shift;
+
+	if (!$self->{lfh})
+	{
+		if (!open(LFH, ">>$self->{lf}"))
+		{
+			return 0;
+		}
+		$self->{lfh} = *LFH;
+	}
+
+	flock($self->{lfh},LOCK_EX);
 }
 
 sub lfhunlock 
 {
-   my $self = shift;
-   flock($self->{lfh},LOCK_UN);
+	my $self = shift;
+
+	if($self->{lfh})
+	{
+		flock($self->{lfh},LOCK_UN);
+		close $self->{lfh};
+		$self->{lfh} = 0;
+	}
 }
 
 sub debug
@@ -782,6 +837,9 @@ Dave Rolsky's, <autarch@urth.org>, code :-)
 Kevin Goess <kevin@goess.org> suggested multiple writers should be
 supported. He also conned me into doing the time based stuff.
 Thanks Kevin! :-)
+
+Thanks also to Dan Waldheim for helping with some of the
+locking issues in a forked environment.
 
 =cut
 

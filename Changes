@@ -16,3 +16,10 @@ Revision history for Perl extension Log::Dispatch::FileRotate.
 1.05 Thu Nov 21 09:28:42 EST 2002
 	- fixed typos in hash key
 
+1.06 Tue Apr 29 16:08:37 EST 2003
+	- moved inode tests around a bit to fix a warning message
+
+1.07 Sun May  4 23:42:03 EST 2003
+	- fixed up locking in a forked environment
+	- speed up in time mode. Cache recurrences. Much quicker now :-)
+
