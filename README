@@ -34,9 +34,9 @@ DESCRIPTION
     behave the same as Log::Dispatch::File. So see its man page (perldoc
     Log::Dispatch::File)
 
-    The arguments size and max specify the maximum size (in meg) and maximum
-    number of log files created. The size defaults to 10M and the max number
-    of files defaults to 1. If DatePattern is not defined then we default to
+    The arguments size and max specify the maximum size and maximum number
+    of log files created. The size defaults to 10M and the max number of
+    files defaults to 1. If DatePattern is not defined then we default to
     working in size mode. That is, use size values for deciding when to
     rotate.
 
@@ -64,6 +64,13 @@ DESCRIPTION
     writers close to the same time, and if your recurrences aren't too close
     together all should sync up just nicely.
 
+    I initially aasumed a long runinng process but it seems people are using
+    this module as part of short running CGI programs. So, now we look at
+    the last modified time stamp of the log file and compare it to a
+    previous occurance of a DatePattern, on startup only. If the file stat
+    shows the mtime to be earlier than the previous recurrance then I rotate
+    the log file.
+
     We handle multiple writers using flock().
 
 DatePattern
@@ -72,7 +79,7 @@ DatePattern
     and the normal log4j DatePatterns. We don't use DatePattern to define
     the extension of the log file though.
 
-    DatePattern can therfore take forms like:
+    DatePattern can therefore take forms like:
 
           Date::Manip style
                 0:0:0:0:5:30:0       every 5 hours and 30 minutes
@@ -156,7 +163,75 @@ METHODS
                In addition, the following timezone abbreviations are also
                accepted.
 
-                     [ .. snip ... ]
+                     IDLW    -1200    International Date Line West
+                     NT      -1100    Nome
+                     HST     -1000    Hawaii Standard
+                     CAT     -1000    Central Alaska
+                     AHST    -1000    Alaska-Hawaii Standard
+                     AKST    -0900    Alaska Standard
+                     YST     -0900    Yukon Standard
+                     HDT     -0900    Hawaii Daylight
+                     AKDT    -0800    Alaska Daylight
+                     YDT     -0800    Yukon Daylight
+                     PST     -0800    Pacific Standard
+                     PDT     -0700    Pacific Daylight
+                     MST     -0700    Mountain Standard
+                     MDT     -0600    Mountain Daylight
+                     CST     -0600    Central Standard
+                     CDT     -0500    Central Daylight
+                     EST     -0500    Eastern Standard
+                     SAT     -0400    Chile
+                     EDT     -0400    Eastern Daylight
+                     AST     -0400    Atlantic Standard
+                     ADT     -0300    Atlantic Daylight
+                     NDT     -0230    Newfoundland Daylight
+                     AT      -0200    Azores
+                     WAT     -0100    West Africa
+                     GMT     +0000    Greenwich Mean
+                     UT      +0000    Universal (Coordinated)
+                     UTC     +0000    Universal (Coordinated)
+                     WET     +0000    Western European
+                     WEST    +0000    Alias for Western European
+                     CET     +0100    Central European
+                     FWT     +0100    French Winter
+                     MET     +0100    Middle European
+                     MEZ     +0100    Middle European
+                     MEWT    +0100    Middle European Winter
+                     SWT     +0100    Swedish Winter
+                     BST     +0100    British Summer     bst=Brazil standard  -0300
+                     GB      +0100    GMT with daylight savings
+                     CEST    +0200    Central European Summer
+                     EET     +0200    Eastern Europe, USSR Zone 1
+                     FST     +0200    French Summer
+                     MEST    +0200    Middle European Summer
+                     MESZ    +0200    Middle European Summer
+                     METDST  +0200    An alias for MEST used by HP-UX
+                     SAST    +0200    South African Standard
+                     SST     +0200    Swedish Summer       sst=South Sumatra    +0700
+                     EEST    +0300    Eastern Europe Summer
+                     BT      +0300    Baghdad, USSR Zone 2
+                     MSK     +0300    Moscow
+                     IT      +0330    Iran
+                     ZP4     +0400    USSR Zone 3
+                     MSD     +0300    Moscow Daylight
+                     ZP5     +0500    USSR Zone 4
+                     IST     +0530    Indian Standard
+                     ZP6     +0600    USSR Zone 5
+                     CCT     +0800    China Coast, USSR Zone 7
+                     AWST    +0800    West Australian Standard
+                     WST     +0800    West Australian Standard
+                     PHT     +0800    Asia Manila
+                     JST     +0900    Japan Standard, USSR Zone 8
+                     ROK     +0900    Republic of Korea
+                     CAST    +0930    Central Australian Standard
+                     EAST    +1000    Eastern Australian Standard
+                     GST     +1000    Guam Standard, USSR Zone 9  gst=Greenland Std
+                     CADT    +1030    Central Australian Daylight
+                     EADT    +1100    Eastern Australian Daylight
+                     IDLE    +1200    International Date Line East
+                     NZST    +1200    New Zealand Standard
+                     NZT     +1200    New Zealand
+                     NZDT    +1300    New Zealand Daylight
 
     -- DatePattern ($)
         The DatePattern as defined above.
@@ -221,6 +296,30 @@ TODO
 
     Could possibly use Logfile::Rotate as well/instead.
 
-PRINCIPLE AUTHOR
-    Mark Pfeiffer 
+AUTHOR
+    Mark Pfeiffer, <markpf at mlp-consulting dot com dot au> inspired by
+    Dave Rolsky's, <autarch at urth dot org>, code :-)
+
+    Kevin Goess <cpan at goess dot org> suggested multiple writers should be
+    supported. He also conned me into doing the time based stuff. Thanks
+    Kevin! :-)
+
+    Thanks also to Dan Waldheim for helping with some of the locking issues
+    in a forked environment.
+
+    And thanks to Stephen Gordon for his more portable code on lockfile
+    naming.
+
+Copyright
+    Copyright 2005-2006, Mark Pfeiffer
+
+    This code may be copied only under the terms of the Artistic License
+    which may be found in the Perl 5 source kit.
+
+    Use 'perldoc perlartistic' to see the Artistic License.
+
+    Complete documentation for Perl, including FAQ lists, should be found on
+    this system using `man perl' or `perldoc perl'. If you have access to
+    the Internet, point your browser at http://www.perl.org/, the Perl Home
+    Page.
 

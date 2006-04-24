@@ -27,7 +27,7 @@ my $tz;
 eval '$tz= Date_TimeZone();';
 if($@)
 {
-	#print "ERROR Unable to determine timezone! Lets see if it matters..\n";
+	print "Unable to determine timezone! Lets see if it matters..\n";
 	my $start = DateCalc("now","+ 1 second");
 	my @dates = ParseRecur('0:0:0:0:0:1*0',"now",$start,'20 minutes later');
 
@@ -39,7 +39,7 @@ if($@)
 	# all bets are off.
 	if( @epochs )
 	{
-		#print "It looks like we can get by without a timezone. Lucky!\n";
+		print "It looks like we can get by without a timezone. Lucky!\n";
 		print "ok 2\n";
 	}
 	else
@@ -52,7 +52,7 @@ if($@)
 }
 else
 {
-	#print "Your timezone is $tz.\n";
+	print "Your timezone is $tz.\n";
 	$tz = "log4j.appender.FILE.TZ=$tz";
 	print "ok 2\n";
 }
@@ -74,11 +74,12 @@ log4j.appender.FILE.filename=myerrs.log
 log4j.appender.FILE.mode=append
 log4j.appender.FILE.size=20000
 # This is my timezone in Aus
-#log4j.appender.FILE.TZ=EADT
+# log4j.appender.FILE.TZ=EADT
 # This is hopefully your timezone
 $tz
 #recurrance dates - Every Hour and Every 10mins and 1st day 4th hr of every week
 log4j.appender.FILE.DatePattern=yyyy-dd-HH; 0:0:0:0:0:10*0; 0:0:1*1:4:0:0
+#log4j.appender.FILE.DatePattern=0:0:0:0:0:1:0
 #log4j.appender.FILE.DatePattern=yyyy-dd-HH
 log4j.appender.FILE.max=5
 log4j.appender.FILE.layout=org.apache.log4j.PatternLayout
@@ -121,7 +122,7 @@ while ($i <= 65 )
 
  $logger1->info($$ . ' this is an info message via logger1');
  $i++;
- #sleep 1;
+# sleep 1;
  print ".";
 }
 print "\n";

@@ -17,7 +17,7 @@ Params::Validate::validation_options( allow_extra => 1 );
 
 use vars qw[ $VERSION ];
 
-$VERSION = sprintf "%d.%02d", q$Revision: 1.13 $ =~ /: (\d+)\.(\d+)/;
+$VERSION = sprintf "%d.%02d", q$Revision: 1.14 $ =~ /: (\d+)\.(\d+)/;
 
 sub new
 {
@@ -981,4 +981,20 @@ And thanks to Stephen Gordon for his more portable code on lockfile
 naming.
 
 =cut
+
+=head1 Copyright
+
+Copyright 2005-2006, Mark Pfeiffer
+
+This code may be copied only under the terms of the Artistic License
+which may be found in the Perl 5 source kit.
+
+Use 'perldoc perlartistic' to see the Artistic License.
+
+Complete documentation for Perl, including FAQ lists, should be found on
+this system using `man perl' or `perldoc perl'.  If you have access to the
+Internet, point your browser at http://www.perl.org/, the Perl Home Page.
+
+=cut
+
 

@@ -57,4 +57,6 @@ Revision history for Perl extension Log::Dispatch::FileRotate.
 	- Added better lockfile name picking thanks to Stephen Gordon
 	- Removed the $$ from the lockfile name as it makes it too uniq
 
+1.14 Mon Apr 24 13:35:06 EST 2006
+	- create copyright notice
 
