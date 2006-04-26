@@ -60,3 +60,6 @@ Revision history for Perl extension Log::Dispatch::FileRotate.
 1.14 Mon Apr 24 13:35:06 EST 2006
 	- create copyright notice
 
+1.15 Wed Apr 26 08:09:20 EST 2006
+	- Added GPL copyright notice to fit with Perl 5
+
