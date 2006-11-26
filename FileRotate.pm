@@ -17,7 +17,7 @@ Params::Validate::validation_options( allow_extra => 1 );
 
 use vars qw[ $VERSION ];
 
-$VERSION = sprintf "%d.%02d", q$Revision: 1.15 $ =~ /: (\d+)\.(\d+)/;
+$VERSION = sprintf "%d.%02d", q$Revision: 1.16 $ =~ /: (\d+)\.(\d+)/;
 
 sub new
 {
@@ -446,7 +446,7 @@ sub _gen_occurance
 	}
 	else # years
 	{
-		my($yrs) = m/^(\d+):/;
+		my($yrs) = $pat =~ m/^(\d+):/;
 		$yrs = 1 unless $yrs;
 		my $months = $yrs * 4 * 12;
 
