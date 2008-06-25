@@ -17,7 +17,7 @@ Params::Validate::validation_options( allow_extra => 1 );
 
 use vars qw[ $VERSION ];
 
-$VERSION = sprintf "%d.%02d", q$Revision: 1.17 $ =~ /: (\d+)\.(\d+)/;
+$VERSION = sprintf "%d.%02d", q$Revision: 1.18 $ =~ /: (\d+)\.(\d+)/;
 
 sub new
 {
@@ -49,7 +49,7 @@ sub new
 	# Max number of files defaults to 1. No limit enforced here. Only
 	# positive whole numbers allowed
 	$self->{max}  = $p{max};
-	$self->{max}  = 1 unless $self->{max} =~ /^\d+$/ && $self->{max} ;
+	$self->{max}  = 1 unless defined $self->{max} && $self->{max} =~ /^\d+$/ && $self->{max} > 0 ;
 
 	# Get a name for our Lock file
 	my $name = $self->{params}->{filename};
@@ -801,96 +801,6 @@ The maxium number of log files to create.
 
 The TimeZone time based calculations should be done in. This should match
 Date::Manip's concept of timezones and of course your machines timezone.
-Date::Manip will normally work everything out for you. Except in my case
-where EST means Eastern Standard Time in Australia not the US! I had to
-use AEST or EADT instead. Here is a list of Date::Manip's timezones
-straight from its man page.
-
-
-       The following timezone names are currently understood (and
-       can be used in parsing dates).  These are zones defined in
-       RFC 822.
-
-           Universal:  GMT, UT
-           US zones :  EST, EDT, CST, CDT, MST, MDT, PST, PDT
-           Military :  A to Z (except J)
-           Other    :  +HHMM or -HHMM
-           ISO 8601 :  +HH:MM, +HH, -HH:MM, -HH
-
-       In addition, the following timezone abbreviations are also
-       accepted.
-
-             IDLW    -1200    International Date Line West
-             NT      -1100    Nome
-             HST     -1000    Hawaii Standard
-             CAT     -1000    Central Alaska
-             AHST    -1000    Alaska-Hawaii Standard
-             AKST    -0900    Alaska Standard
-             YST     -0900    Yukon Standard
-             HDT     -0900    Hawaii Daylight
-             AKDT    -0800    Alaska Daylight
-             YDT     -0800    Yukon Daylight
-             PST     -0800    Pacific Standard
-             PDT     -0700    Pacific Daylight
-             MST     -0700    Mountain Standard
-             MDT     -0600    Mountain Daylight
-             CST     -0600    Central Standard
-             CDT     -0500    Central Daylight
-             EST     -0500    Eastern Standard
-             SAT     -0400    Chile
-             EDT     -0400    Eastern Daylight
-             AST     -0400    Atlantic Standard
-             ADT     -0300    Atlantic Daylight
-             NDT     -0230    Newfoundland Daylight
-             AT      -0200    Azores
-             WAT     -0100    West Africa
-             GMT     +0000    Greenwich Mean
-             UT      +0000    Universal (Coordinated)
-             UTC     +0000    Universal (Coordinated)
-             WET     +0000    Western European
-             WEST    +0000    Alias for Western European
-             CET     +0100    Central European
-             FWT     +0100    French Winter
-             MET     +0100    Middle European
-             MEZ     +0100    Middle European
-             MEWT    +0100    Middle European Winter
-             SWT     +0100    Swedish Winter
-             BST     +0100    British Summer     bst=Brazil standard  -0300
-             GB      +0100    GMT with daylight savings
-             CEST    +0200    Central European Summer
-             EET     +0200    Eastern Europe, USSR Zone 1
-             FST     +0200    French Summer
-             MEST    +0200    Middle European Summer
-             MESZ    +0200    Middle European Summer
-             METDST  +0200    An alias for MEST used by HP-UX
-             SAST    +0200    South African Standard
-             SST     +0200    Swedish Summer       sst=South Sumatra    +0700
-             EEST    +0300    Eastern Europe Summer
-             BT      +0300    Baghdad, USSR Zone 2
-             MSK     +0300    Moscow
-             IT      +0330    Iran
-             ZP4     +0400    USSR Zone 3
-             MSD     +0300    Moscow Daylight
-             ZP5     +0500    USSR Zone 4
-             IST     +0530    Indian Standard
-             ZP6     +0600    USSR Zone 5
-             CCT     +0800    China Coast, USSR Zone 7
-             AWST    +0800    West Australian Standard
-             WST     +0800    West Australian Standard
-             PHT     +0800    Asia Manila
-             JST     +0900    Japan Standard, USSR Zone 8
-             ROK     +0900    Republic of Korea
-             CAST    +0930    Central Australian Standard
-             EAST    +1000    Eastern Australian Standard
-             GST     +1000    Guam Standard, USSR Zone 9  gst=Greenland Std
-             CADT    +1030    Central Australian Daylight
-             EADT    +1100    Eastern Australian Daylight
-             IDLE    +1200    International Date Line East
-             NZST    +1200    New Zealand Standard
-             NZT     +1200    New Zealand
-             NZDT    +1300    New Zealand Daylight
-
-
 
 =item -- DatePattern ($)
 

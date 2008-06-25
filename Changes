@@ -63,3 +63,9 @@ Revision history for Perl extension Log::Dispatch::FileRotate.
 1.15 Wed Apr 26 08:09:20 EST 2006
 	- Added GPL copyright notice to fit with Perl 5
 
+1.18 Wed Jun 25 12:19:11 EST 2008
+	- rolled up issue with using Date::Manip internal function
+	- added extra test for cygwin
+	- added better tests for 'max' paramater
+	- removed TZ details from doco and pointed people to Date::Manip
+

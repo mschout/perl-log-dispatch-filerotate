@@ -15,6 +15,12 @@ use Log::Dispatch::FileRotate;
 $loaded = 1;
 print "ok 1\n";
 
+if ($^O eq 'cygwin') {
+# Date::Manip doesn't like Cygwin's TZ value.
+	$ENV{TZ} = (split " ",(`date`)[0])[4];
+}
+
+
 ######################### End of black magic.
 
 # Insert your test code below (better if it prints "ok 13"
