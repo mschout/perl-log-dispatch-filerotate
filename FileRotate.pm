@@ -17,7 +17,7 @@ Params::Validate::validation_options( allow_extra => 1 );
 
 use vars qw[ $VERSION ];
 
-$VERSION = sprintf "%d.%02d", q$Revision: 1.16 $ =~ /: (\d+)\.(\d+)/;
+$VERSION = sprintf "%d.%02d", q$Revision: 1.17 $ =~ /: (\d+)\.(\d+)/;
 
 sub new
 {
@@ -476,9 +476,10 @@ sub _gen_occurance
 	# Convert the dates to seconds since the epoch so we can use
 	# numerical comparision instead of textual
 	my @epochs = ();
+	my @a = ('%Y','%m','%d','%H','%M','%S');
 	foreach(@dates)
 	{
-		my($y,$m,$d,$h,$mn,$s) = Date::Manip::Date_Split($_, 1);
+		my($y,$m,$d,$h,$mn,$s) = Date::Manip::UnixDate($_, @a);
 		my $e = Date_SecsSince1970GMT($m,$d,$y,$h,$mn,$s);
 		if( $self->{debug} )
 		{
