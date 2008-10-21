@@ -9,7 +9,7 @@ WriteMakefile(
 	'AUTHOR'        => '"Mark Pfeiffer" <markpf@mlp-consulting.com.au>',
 	'clean'         => {FILES => "*.log*"},
 	 PREREQ_PM   => {
-			'Log::Log4perl'	=> '0.23', # or a minimum workable version
+			'Log::Log4perl'	=> '1.0', # or a minimum workable version
 			'Log::Dispatch::Output' => 0,
 			'Date::Manip'      => 0,
 			'Params::Validate' => 0,

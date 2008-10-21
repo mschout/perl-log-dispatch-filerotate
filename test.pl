@@ -8,7 +8,7 @@
 # Change 1..1 below to 1..last_test_to_print .
 # (It may become useful if the test is moved to ./t subdirectory.)
 
-BEGIN { $| = 1; print "1..5\n"; }
+BEGIN { $| = 1; print "1..8\n"; }
 END {print "not ok 1\n" unless $loaded;}
 use Log::Log4perl;
 use Log::Dispatch::FileRotate;
@@ -134,3 +134,46 @@ while ($i <= 65 )
 print "\n";
 print "ok 5\n";
 
+### Reproduce no-activity bug
+
+our $count = 0;
+
+my $conf = q{
+log4perl.logger                                = INFO, default
+log4perl.appender.default = Log::Dispatch::FileRotate
+log4perl.appender.default.filename             = test.log
+log4perl.appender.default.mode                 = append
+log4perl.appender.default.layout = SimpleLayout
+log4perl.appender.default.max                  = 6
+log4perl.appender.default.DatePattern          = yyyy-MM-dd-HH
+};
+Log::Log4perl->init( \$conf );
+Log::Log4perl->appender_by_name("default")->{timer} =
+    sub { time() + $main::count * 3600 };
+# Log::Log4perl->appender_by_name("default")->{debug} = 1;
+
+unlink $_ for <test.log*>;
+
+Log::Log4perl::get_logger("")->info( "count=$count" );
+$count += 10;
+Log::Log4perl::get_logger("")->info( "count=$count" );
+Log::Log4perl::get_logger("")->info( "count=$count" );
+Log::Log4perl::get_logger("")->info( "count=$count" );
+
+if(! -f "test.log") {
+    print "not ";
+}
+print "ok 6\n";
+
+if(! -f "test.log.1") {
+    print "not ";
+}
+print "ok 7\n";
+
+  # This shouldn't exist
+if(-f "test.log.2") {
+    print "not ";
+}
+print "ok 8\n";
+
+unlink $_ for <test.log*>;

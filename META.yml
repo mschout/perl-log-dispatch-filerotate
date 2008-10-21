@@ -1,14 +1,14 @@
 # http://module-build.sourceforge.net/META-spec.html
 #XXXXXXX This is a prototype!!!  It will change in the future!!! XXXXX#
 name:         Log-Dispatch-FileRotate
-version:      1.18
+version:      1.19
 version_from: FileRotate.pm
 installdirs:  site
 requires:
     Date::Manip:                   0
     Fcntl:                         0
     Log::Dispatch::Output:         0
-    Log::Log4perl:                 0.23
+    Log::Log4perl:                 1.0
     Params::Validate:              0
 
 distribution_type: module

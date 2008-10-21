@@ -68,4 +68,10 @@ Revision history for Perl extension Log::Dispatch::FileRotate.
 	- added extra test for cygwin
 	- added better tests for 'max' paramater
 	- removed TZ details from doco and pointed people to Date::Manip
+1.19 Tue Oct 21 2008
+	- Added patch from MS to solve bug 39900. Basically logs appearing
+	slower than a recurrance cause the module to keep rotating
+	logs. We now jump forward to the right recurrance interval. Thanks
+	to the people at Yahoo who discovered it.
+	- Updated dependancy on Log4Perl to 1.0
 

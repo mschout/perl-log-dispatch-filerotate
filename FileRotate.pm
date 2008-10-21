@@ -17,7 +17,7 @@ Params::Validate::validation_options( allow_extra => 1 );
 
 use vars qw[ $VERSION ];
 
-$VERSION = sprintf "%d.%02d", q$Revision: 1.18 $ =~ /: (\d+)\.(\d+)/;
+$VERSION = sprintf "%d.%02d", q$Revision: 1.19 $ =~ /: (\d+)\.(\d+)/;
 
 sub new
 {
@@ -31,6 +31,7 @@ sub new
 	$self->{'debug'} = 0;
     $self->_basic_init(%p);
     $self->{'LDF'} =  Log::Dispatch::File->new(%p);  # Our log
+	$self->{'timer'} = sub { time() } unless defined $self->{'timer'};
 
 	# Keep a copy of interesting stuff as well
 	$self->{params} = \%p;
@@ -199,7 +200,9 @@ sub log_message
 	my $size   = (stat($fh))[7];   # Stat the handle to get real size
 	my $inode  = (stat($fh))[1];   # get real inode
 	my $finode = (stat($name))[1]; # Stat the name for comparision
-	warn localtime()." $$  s=$size, i=$inode, f=$finode, n=$name\n" if $self->{debug};
+	warn localtime()." $$  s=$size, i=$inode, f=".
+			(defined $finode ? $finode : "undef") .
+			 ", n=$name\n" if $self->{debug};
 
 	# If finode and inode are the same then nobody has done a rename
 	# under us and we can continue. Otherwise just close and reopen.
@@ -333,7 +336,7 @@ sub time_to_rotate
 
 		# Check need for rotation. Loop through our recurrances looking
 		# for expiration times. Any we find that have expired we update.
-		my $tm    = time();
+		my $tm    = $self->{timer}->();
 		my @recur = @{$self->{'recurrance'}};
 		@{$self->{'recurrance'}} = ();
 		for my $rec (@recur)
@@ -532,6 +535,17 @@ sub _get_next_occurance
 {
     my $self = shift;        # My object
     my $pat  = shift;
+
+	# (ms) Throw out expired occurances
+	my $now = $self->{timer}->();
+	if(defined $self->{'dates'}{$pat})
+	{
+		while( @{$self->{'dates'}{$pat}} )
+		{
+			last if $self->{'dates'}{$pat}->[0] >= $now;
+			shift @{$self->{'dates'}{$pat}};
+		}
+	}
 
 	# If this is first time then generate some new ones including one
 	# before our time to test against the log file
