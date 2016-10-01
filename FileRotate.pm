@@ -67,7 +67,19 @@ sub new
 	# bets are off!
 	if(defined $p{'TZ'})
 	{
-		Date_Init("TZ=".$p{'TZ'});  # EADT or EAST when not in daylight savings
+		# Date::Manip deprecated TZ= in 6.x.  In order to maintain backwards
+		# compat with 5.8, we use TZ if setdate is not avilable.  Otherwise we
+		# use setdate.
+		require version;
+		if (version->parse($Date::Manip::VERSION) < version->parse('6.0'))
+		{
+			Date_Init("TZ=".$p{'TZ'});
+		}
+		else
+		{
+			# Date::Manip 6.x deprecates TZ, use  SetDate instead
+			Date_Init("setdate=now,".$p{'TZ'});
+		}
 	}
 	if(defined $p{'DatePattern'})
 	{

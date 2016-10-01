@@ -14,5 +14,6 @@ WriteMakefile(
 			'Date::Manip'      => 0,
 			'Params::Validate' => 0,
 			'Fcntl'         => 0,
+			'version'          => 0,
     }
 );
