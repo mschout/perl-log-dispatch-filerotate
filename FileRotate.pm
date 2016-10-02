@@ -810,6 +810,8 @@ except to quote (from the man page):
 This method takes a hash of parameters.  The following options are
 valid:
 
+=over 4
+
 =item -- name ($)
 
 The name of the object (not the filename!).  Required.
@@ -877,6 +879,8 @@ will only be applied to a given message once.
 
 Turn on lots of warning messages to STDERR about what this module is
 doing if set to 1. Really only useful to me.
+
+=back
 
 =item * log_message( message => $ )
 

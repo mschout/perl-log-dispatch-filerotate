@@ -78,4 +78,4 @@ Revision history for Perl extension Log::Dispatch::FileRotate.
 1.20 Sat Oct 01 2016
 	- Fix Date::Manip warnings about deprecated TZ config variable. If
 	  Date::Manip 6.x or later is installed we now use SetDate instead.
-
+	- Fix minor POD error (Thanks Matthias Schmitz) [#47665]
