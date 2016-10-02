@@ -1,81 +1,86 @@
 Revision history for Perl extension Log::Dispatch::FileRotate.
 
-0.01  Tue Oct  1 01:12:30 2002
-	- original version; created by h2xs 1.20 with options
-		-AX -n Log::Dispatch::FileRotate
-
-1.01 Tue Oct  1 01:21:54 EST 2002
-	- Real code copied over h2xs stuff.
-
-1.03 Mon Nov 18 17:19:06 EST 2002
-	- added multiple writer stuff. Use flock() to handle locks
-
-1.04 Wed Nov 20 13:43:04 EST 2002
-	- added Time based constraints.
-
-1.05 Thu Nov 21 09:28:42 EST 2002
-	- fixed typos in hash key
-
-1.06 Tue Apr 29 16:08:37 EST 2003
-	- moved inode tests around a bit to fix a warning message
-
-1.07 Sun May  4 23:42:03 EST 2003
-	- fixed up locking in a forked environment
-	- speed up in time mode. Cache recurrences. Much quicker now :-)
-
-1.08 Thu Jun  5 11:27:49 EST 2003
-	- now build log.conf at 'make test' time as we keep having people
-	  fail due to bad TZ settings
-	- Also added some more testing on the recurrances
-
-1.09 Thu Jun  5 17:57:46 EST 2003
-	- Even better testing of TZ issues. Try to see if we can work around
-	  them by ignoring and then testing results.
-
-1.10 Mon Jun 23 09:40:34 EST 2003
-	- Seems defaulting to size in Megs happened between 1.05 and 1.06
-	  which is not what people want. So back to bytes now.
-
-1.11 Thu Sep 25 11:18:04 EST 2003
-	- Forgot to update the Doco from 1.10. 
-	- Added some missing log4j recurrence patterns and made them
-	  case insensitive
-
-1.12 Mon Feb 28 23:20:03 EST 2005
-	- Added code to handle short running proggies like CGIs that want to
-	  use the DatePattern stuff. Now check mtime of log file to see if we
-	  need to rotate (at start up only).
-	- Got rid of epochs as they conflict with Date::Manip's UnixDate()
-	  function on MacOSX. This slows us down quite a bit so I am using
-	  cmp instead of Date_Cmp() to get some speed back.
-	- Fixed up some typos and removed some email addresses as requested.
-	- Not released
-
-1.13 Tue Mar  1 12:04:13 EST 2005
-	- Went back to epoch times for comparisions. My comments above
-	  regarding Date::Manip and MacOSX are silly.
-	- Added better lockfile name picking thanks to Stephen Gordon
-	- Removed the $$ from the lockfile name as it makes it too uniq
-
-1.14 Mon Apr 24 13:35:06 EST 2006
-	- create copyright notice
-
-1.15 Wed Apr 26 08:09:20 EST 2006
-	- Added GPL copyright notice to fit with Perl 5
-
-1.18 Wed Jun 25 12:19:11 EST 2008
-	- rolled up issue with using Date::Manip internal function
-	- added extra test for cygwin
-	- added better tests for 'max' paramater
-	- removed TZ details from doco and pointed people to Date::Manip
-1.19 Tue Oct 21 2008
-	- Added patch from MS to solve bug 39900. Basically logs appearing
-	slower than a recurrance cause the module to keep rotating
-	logs. We now jump forward to the right recurrance interval. Thanks
-	to the people at Yahoo who discovered it.
-	- Updated dependancy on Log4Perl to 1.0
+{{$NEXT}}
+    - Fix minor POD error (Thanks Matthias Schmitz) [#47665]
+    - Mark Log::Log4perl as a "test_requires" dependency.  Eventually this
+      should be optional altogether for testing.
 
 1.20 Sat Oct 01 2016
-	- Fix Date::Manip warnings about deprecated TZ config variable. If
-	  Date::Manip 6.x or later is installed we now use SetDate instead.
-	- Fix minor POD error (Thanks Matthias Schmitz) [#47665]
+    - Fix Date::Manip warnings about deprecated TZ config variable. If
+      Date::Manip 6.x or later is installed we now use SetDate instead.
+
+1.19 Tue Oct 21 2008
+    - Added patch from MS to solve bug 39900. Basically logs appearing slower
+      than a recurrance cause the module to keep rotating logs. We now jump
+      forward to the right recurrance interval. Thanks to the people at Yahoo
+      who discovered it.
+
+    - Updated dependancy on Log4Perl to 1.0
+
+1.18 Wed Jun 25 12:19:11 EST 2008
+    - rolled up issue with using Date::Manip internal function
+    - added extra test for cygwin
+    - added better tests for 'max' paramater
+    - removed TZ details from doco and pointed people to Date::Manip
+1.15 Wed Apr 26 08:09:20 EST 2006
+    - Added GPL copyright notice to fit with Perl 5
+
+1.14 Mon Apr 24 13:35:06 EST 2006
+    - create copyright notice
+
+1.13 Tue Mar  1 12:04:13 EST 2005
+    - Went back to epoch times for comparisions. My comments above
+      regarding Date::Manip and MacOSX are silly.
+    - Added better lockfile name picking thanks to Stephen Gordon
+    - Removed the $$ from the lockfile name as it makes it too uniq
+
+1.12 Mon Feb 28 23:20:03 EST 2005
+    - Added code to handle short running proggies like CGIs that want to
+      use the DatePattern stuff. Now check mtime of log file to see if we
+      need to rotate (at start up only).
+    - Got rid of epochs as they conflict with Date::Manip's UnixDate()
+      function on MacOSX. This slows us down quite a bit so I am using
+      cmp instead of Date_Cmp() to get some speed back.
+    - Fixed up some typos and removed some email addresses as requested.
+    - Not released
+
+1.11 Thu Sep 25 11:18:04 EST 2003
+    - Forgot to update the Doco from 1.10. 
+    - Added some missing log4j recurrence patterns and made them
+      case insensitive
+
+1.10 Mon Jun 23 09:40:34 EST 2003
+    - Seems defaulting to size in Megs happened between 1.05 and 1.06
+      which is not what people want. So back to bytes now.
+
+1.09 Thu Jun  5 17:57:46 EST 2003
+    - Even better testing of TZ issues. Try to see if we can work around
+      them by ignoring and then testing results.
+
+1.08 Thu Jun  5 11:27:49 EST 2003
+    - now build log.conf at 'make test' time as we keep having people
+      fail due to bad TZ settings
+    - Also added some more testing on the recurrances
+
+1.07 Sun May  4 23:42:03 EST 2003
+    - fixed up locking in a forked environment
+    - speed up in time mode. Cache recurrences. Much quicker now :-)
+
+1.06 Tue Apr 29 16:08:37 EST 2003
+    - moved inode tests around a bit to fix a warning message
+
+1.05 Thu Nov 21 09:28:42 EST 2002
+    - fixed typos in hash key
+
+1.04 Wed Nov 20 13:43:04 EST 2002
+    - added Time based constraints.
+
+1.03 Mon Nov 18 17:19:06 EST 2002
+    - added multiple writer stuff. Use flock() to handle locks
+
+1.01 Tue Oct  1 01:21:54 EST 2002
+    - Real code copied over h2xs stuff.
+
+0.01  Tue Oct  1 01:12:30 2002
+    - original version; created by h2xs 1.20 with options
+        -AX -n Log::Dispatch::FileRotate

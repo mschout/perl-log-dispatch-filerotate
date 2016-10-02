@@ -1,5 +1,7 @@
 package Log::Dispatch::FileRotate;
 
+# ABSTRACT: Log to Files that Archive/Rotate Themselves
+
 require 5.005;
 use strict;
 
@@ -15,9 +17,84 @@ use File::Spec;   # For file-names
 use Params::Validate qw(validate SCALAR BOOLEAN);
 Params::Validate::validation_options( allow_extra => 1 );
 
-use vars qw[ $VERSION ];
+=method new(%p)
 
-$VERSION = sprintf "%d.%02d", q$Revision: 1.20 $ =~ /: (\d+)\.(\d+)/;
+This method takes a hash of parameters.  The following options are
+valid:
+
+=over 4
+
+=item -- name ($)
+
+The name of the object (not the filename!).  Required.
+
+=item -- size ($)
+
+The maxium (or close to) size the log file can grow too.
+
+=item -- max ($)
+
+The maxium number of log files to create.
+
+
+=item -- TZ ($)
+
+The TimeZone time based calculations should be done in. This should match
+Date::Manip's concept of timezones and of course your machines timezone.
+
+=item -- DatePattern ($)
+
+The DatePattern as defined above.
+
+=item -- min_level ($)
+
+The minimum logging level this object will accept.  See the
+Log::Dispatch documentation for more information.  Required.
+
+=item -- max_level ($)
+
+The maximum logging level this obejct will accept.  See the
+Log::Dispatch documentation for more information.  This is not
+required.  By default the maximum is the highest possible level (which
+means functionally that the object has no maximum).
+
+=item -- filename ($)
+
+The filename to be opened for writing. This is the base name. Rotated log
+files will be renamed filename.1 thru to filename.C<max>. Where max is the
+paramater defined above.
+
+=item -- mode ($)
+
+The mode the file should be opened with.  Valid options are 'write',
+'>', 'append', '>>', or the relevant constants from Fcntl.  The
+default is 'write'.
+
+=item -- autoflush ($)
+
+Whether or not the file should be autoflushed.  This defaults to true.
+
+=item -- callbacks( \& or [ \&, \&, ... ] )
+
+This parameter may be a single subroutine reference or an array
+reference of subroutine references.  These callbacks will be called in
+the order they are given and passed a hash containing the following keys:
+
+ ( message => $log_message, level => $log_level )
+
+The callbacks are expected to modify the message and then return a
+single scalar containing that modified message.  These callbacks will
+be called when either the C<log> or C<log_to> methods are called and
+will only be applied to a given message once.
+
+=item -- DEBUG ($)
+
+Turn on lots of warning messages to STDERR about what this module is
+doing if set to 1. Really only useful to me.
+
+=back
+
+=cut
 
 sub new
 {
@@ -92,6 +169,17 @@ sub new
     return $self;
 }
 
+=method setDatePattern( $ or [ $, $, ... ] )
+
+Set a new suite of recurrances for file rotation. You can pass in a
+single string or a reference to an array of strings. Multiple recurrences
+can also be define within a single string by seperating them with a
+semi-colon (;)
+
+See the discussion above regarding the setDatePattern paramater for more
+details.
+
+=cut
 
 ###########################################################################
 #
@@ -183,6 +271,14 @@ sub setDatePattern
 
 }
 
+
+=method log_message( message => $ )
+
+Sends a message to the appropriate output.  Generally this shouldn't
+be called directly but should be called through the C<log()> method
+(in Log::Dispatch::Output).
+
+=cut
 
 sub log_message
 {
@@ -664,10 +760,6 @@ sub debug
 
 __END__
 
-=head1 NAME
-
-Log::Dispatch::FileRotate - Log to files that archive/rotate themselves
-
 =head1 SYNOPSIS
 
   use Log::Dispatch::FileRotate;
@@ -799,144 +891,24 @@ except to quote (from the man page):
              0:1*-1:2:0:0:0       last tuesday of every month
              0:1:0*-2:0:0:0       2nd to last day of every month
 
-
-
-=head1 METHODS
-
-=over 4
-
-=item * new(%p)
-
-This method takes a hash of parameters.  The following options are
-valid:
-
-=over 4
-
-=item -- name ($)
-
-The name of the object (not the filename!).  Required.
-
-=item -- size ($)
-
-The maxium (or close to) size the log file can grow too.
-
-=item -- max ($)
-
-The maxium number of log files to create.
-
-
-=item -- TZ ($)
-
-The TimeZone time based calculations should be done in. This should match
-Date::Manip's concept of timezones and of course your machines timezone.
-
-=item -- DatePattern ($)
-
-The DatePattern as defined above.
-
-=item -- min_level ($)
-
-The minimum logging level this object will accept.  See the
-Log::Dispatch documentation for more information.  Required.
-
-=item -- max_level ($)
-
-The maximum logging level this obejct will accept.  See the
-Log::Dispatch documentation for more information.  This is not
-required.  By default the maximum is the highest possible level (which
-means functionally that the object has no maximum).
-
-=item -- filename ($)
-
-The filename to be opened for writing. This is the base name. Rotated log
-files will be renamed filename.1 thru to filename.C<max>. Where max is the
-paramater defined above.
-
-=item -- mode ($)
-
-The mode the file should be opened with.  Valid options are 'write',
-'>', 'append', '>>', or the relevant constants from Fcntl.  The
-default is 'write'.
-
-=item -- autoflush ($)
-
-Whether or not the file should be autoflushed.  This defaults to true.
-
-=item -- callbacks( \& or [ \&, \&, ... ] )
-
-This parameter may be a single subroutine reference or an array
-reference of subroutine references.  These callbacks will be called in
-the order they are given and passed a hash containing the following keys:
-
- ( message => $log_message, level => $log_level )
-
-The callbacks are expected to modify the message and then return a
-single scalar containing that modified message.  These callbacks will
-be called when either the C<log> or C<log_to> methods are called and
-will only be applied to a given message once.
-
-=item -- DEBUG ($)
-
-Turn on lots of warning messages to STDERR about what this module is
-doing if set to 1. Really only useful to me.
-
-=back
-
-=item * log_message( message => $ )
-
-Sends a message to the appropriate output.  Generally this shouldn't
-be called directly but should be called through the C<log()> method
-(in Log::Dispatch::Output).
-
-=item * setDatePattern( $ or [ $, $, ... ] )
-
-Set a new suite of recurrances for file rotation. You can pass in a
-single string or a reference to an array of strings. Multiple recurrences
-can also be define within a single string by seperating them with a
-semi-colon (;)
-
-See the discussion above regarding the setDatePattern paramater for more
-details.
-
-=back
-
 =head1 TODO
 
 compression, signal based rotates, proper test suite
 
 Could possibly use Logfile::Rotate as well/instead.
 
-=head1 AUTHOR
+=head1 HISTORY
 
-Mark Pfeiffer, <markpf at mlp-consulting dot com dot au> inspired by
-Dave Rolsky's, <autarch at urth dot org>, code :-)
+Originally written by Mark Pfeiffer, <markpf at mlp-consulting dot com dot au>
+inspired by Dave Rolsky's, <autarch at urth dot org>, code :-)
 
 Kevin Goess <cpan at goess dot org> suggested multiple writers should be
-supported. He also conned me into doing the time based stuff.
-Thanks Kevin! :-)
+supported. He also conned me into doing the time based stuff.  Thanks Kevin!
+:-)
 
-Thanks also to Dan Waldheim for helping with some of the
-locking issues in a forked environment.
+Thanks also to Dan Waldheim for helping with some of the locking issues in a
+forked environment.
 
-And thanks to Stephen Gordon for his more portable code on lockfile
-naming.
-
-=cut
-
-=head1 Copyright
-
-Copyright 2005-2006, Mark Pfeiffer
-
-This code may be copied only under the terms of the Artistic License, or
-GPL License which may be found in the Perl 5 source kit.
-
-Use 'perldoc perlartistic' to see the Artistic License.
-Use 'perldoc perlgpl' to see the GNU General Public License.
-
-Complete documentation for Perl, including FAQ lists, should be found on
-this system using `man perl' or `perldoc perl'.  If you have access to the
-Internet, point your browser at http://www.perl.org/, the Perl Home Page.
+And thanks to Stephen Gordon for his more portable code on lockfile naming.
 
 =cut
-
-
