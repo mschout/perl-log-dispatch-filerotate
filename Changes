@@ -6,6 +6,8 @@ Revision history for Perl extension Log::Dispatch::FileRotate.
       should be optional altogether for testing.
     - use Dist::Zilla to build the dist
     - move test.pl to t/basic.t
+    - add a signature test (optional, skipped if Module::Signature is not
+      installed and only run if TEST_SIGNATURE=1 is passed to make test)
 
 1.20 Sat Oct 01 2016
     - Fix Date::Manip warnings about deprecated TZ config variable. If
