@@ -764,22 +764,23 @@ __END__
 
   use Log::Dispatch::FileRotate;
 
-  my $file = Log::Dispatch::FileRotate->new( name      => 'file1',
-                                       min_level => 'info',
-                                       filename  => 'Somefile.log',
-                                       mode      => 'append' ,
-                                       size      => 10,
-                                       max       => 6,
-                                      );
+  my $file = Log::Dispatch::FileRotate->new(
+      name      => 'file1',
+      min_level => 'info',
+      filename  => 'Somefile.log',
+      mode      => 'append' ,
+      size      => 10*1024*1024,
+      max       => 6);
+
   # or for a time based rotation
 
-  my $file = Log::Dispatch::FileRotate->new( name      => 'file1',
-                                       min_level => 'info',
-                                       filename  => 'Somefile.log',
-                                       mode      => 'append' ,
-                                       TZ        => 'AEDT',
-                                       DatePattern => 'yyyy-dd-HH',
-                                      );
+  my $file = Log::Dispatch::FileRotate->new(
+      name      => 'file1',
+      min_level => 'info',
+      filename  => 'Somefile.log',
+      mode      => 'append' ,
+      TZ        => 'AEDT',
+      DatePattern => 'yyyy-dd-HH');
 
   $file->log( level => 'info', message => "your comment\n" );
 
