@@ -120,7 +120,11 @@ sub new
 	my $ten_meg = 1024*1024*10;
 	my $two_gig = 1024*1024*1024*2;
 	my $size = $ten_meg;
-	$size = $p{size} if defined $p{size};
+	if (defined $p{size}) {
+		# allow perl-literal style nubers 10_000_000 -> 10000000
+		$p{size} =~ s/_//g;
+		$size = $p{size};
+	}
 	$size = $ten_meg unless $size =~ /^\d+$/ && $size < $two_gig && $size > 0;
 	$self->{size} = $size;
 

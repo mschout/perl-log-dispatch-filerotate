@@ -7,6 +7,8 @@ Revision history for Perl extension Log::Dispatch::FileRotate.
     - Split out "no activity" test case into its own file
     - Use Dist::Zilla to build the dist
     - Move test.pl to t/basic.t
+    - Allow "size" parameter to contain underscores such as 10_000_000
+      (recognized as 10000000) [#41064]
     - Add a signature test (optional, skipped if Module::Signature is not
       installed and only run if TEST_SIGNATURE=1 is passed to make test)
     - Docs: fix synopsis reference to size parameter to make it clear that
