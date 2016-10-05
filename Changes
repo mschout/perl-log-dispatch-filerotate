@@ -13,6 +13,8 @@ Revision history for Perl extension Log::Dispatch::FileRotate.
       installed and only run if TEST_SIGNATURE=1 is passed to make test)
     - Docs: fix synopsis reference to size parameter to make it clear that
       the size is in bytes, not megabytes.  [#88286]
+    - Docs: fix synopsis usage to "name" (incorrect) instead of filename
+      (correct)
 
 1.20 Sat Oct 01 2016
     - Fix Date::Manip warnings about deprecated TZ config variable. If

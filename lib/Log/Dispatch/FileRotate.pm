@@ -769,7 +769,7 @@ __END__
   use Log::Dispatch::FileRotate;
 
   my $file = Log::Dispatch::FileRotate->new(
-      name      => 'file1',
+      filename  => 'file1',
       min_level => 'info',
       filename  => 'Somefile.log',
       mode      => 'append' ,
@@ -779,7 +779,7 @@ __END__
   # or for a time based rotation
 
   my $file = Log::Dispatch::FileRotate->new(
-      name      => 'file1',
+      filename  => 'file1',
       min_level => 'info',
       filename  => 'Somefile.log',
       mode      => 'append' ,
