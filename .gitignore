@@ -5,3 +5,4 @@ pm_to_blib
 log.conf
 myerrs.log*
 Log-Dispatch-FileRotate-*
+\.build/
