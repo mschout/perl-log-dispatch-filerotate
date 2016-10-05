@@ -1,5 +1,5 @@
 package Log::Dispatch::FileRotate;
-$Log::Dispatch::FileRotate::VERSION = '1.22'; # TRIAL
+$Log::Dispatch::FileRotate::VERSION = '1.22';
 # ABSTRACT: Log to Files that Archive/Rotate Themselves
 
 require 5.005;

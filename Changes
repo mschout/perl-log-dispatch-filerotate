@@ -1,8 +1,6 @@
 Revision history for Perl extension Log::Dispatch::FileRotate.
 
 1.22  2016-10-05
-
-1.21  2016-10-05
     - Fix minor POD error (Thanks Matthias Schmitz) [#47665]
     - Remove Log::Log4perl dependency.  The tests now use Log::Dispatch
       directly instead of going through Log4perl. [#55359]

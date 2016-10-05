@@ -47,7 +47,7 @@
          }
       }
    },
-   "release_status" : "testing",
+   "release_status" : "stable",
    "resources" : {
       "bugtracker" : {
          "mailto" : "bug-log-dispatch-filerotate at rt.cpan.org",
