@@ -2,13 +2,14 @@ Revision history for Perl extension Log::Dispatch::FileRotate.
 
 {{$NEXT}}
     - Fix minor POD error (Thanks Matthias Schmitz) [#47665]
-    - Mark Log::Log4perl as a "test_requires" dependency.  Eventually this
-      should be optional altogether for testing.
-    - use Dist::Zilla to build the dist
-    - move test.pl to t/basic.t
-    - add a signature test (optional, skipped if Module::Signature is not
+    - Remove Log::Log4perl dependency.  The tests now use Log::Dispatch
+      directly instead of going through Log4perl. [#55359]
+    - Split out "no activity" test case into its own file
+    - Use Dist::Zilla to build the dist
+    - Move test.pl to t/basic.t
+    - Add a signature test (optional, skipped if Module::Signature is not
       installed and only run if TEST_SIGNATURE=1 is passed to make test)
-    - docs: fix synopsis reference to size parameter to make it clear that
+    - Docs: fix synopsis reference to size parameter to make it clear that
       the size is in bytes, not megabytes.  [#88286]
 
 1.20 Sat Oct 01 2016

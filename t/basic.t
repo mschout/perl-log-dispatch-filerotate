@@ -1,179 +1,114 @@
 #!/usr/bin/perl -w
 
-# Before `make install' is performed this script should be runnable with
-# `make test'. After `make install' it should work as `perl test.pl'
-
-######################### We start with some black magic to print on failure.
-
-# Change 1..1 below to 1..last_test_to_print .
-# (It may become useful if the test is moved to ./t subdirectory.)
-
-BEGIN { $| = 1; print "1..8\n"; }
-END {print "not ok 1\n" unless $loaded;}
-use Log::Log4perl;
-use Log::Dispatch::FileRotate;
-$loaded = 1;
-print "ok 1\n";
+use strict;
+use warnings;
+use Test::More 0.88;
+use Path::Tiny 0.018;
 
 if ($^O eq 'cygwin') {
-# Date::Manip doesn't like Cygwin's TZ value.
-	$ENV{TZ} = (split " ",(`date`)[0])[4];
+    # Date::Manip doesn't like Cygwin's TZ value.
+    $ENV{TZ} = (split " ",(`date`)[0])[4];
 }
 
+use_ok 'Log::Dispatch';
+use_ok 'Log::Dispatch::Screen';
+use_ok 'Log::Dispatch::FileRotate';
+use_ok 'Date::Manip';
 
-######################### End of black magic.
-
-# Insert your test code below (better if it prints "ok 13"
-# (correspondingly "not ok 13") depending on the success of chunk 13
-# of the test code):
-
-# First lets build a conf file for use latter
-use Date::Manip;
 my $tz;
-eval '$tz= Date_TimeZone();';
-if($@)
-{
-	print "Unable to determine timezone! Lets see if it matters..\n";
-	my $start = DateCalc("now","+ 1 second");
-	my @dates = ParseRecur('0:0:0:0:0:1*0',"now",$start,'20 minutes later');
-
-	# Should get about 20 in the array
-	my @epochs = map {UnixDate($_,'%s')} @dates;
-	shift(@epochs) while @epochs && $epochs[0] <= time();
-
-	# If no epochs left then Timezone issue is going to bite us!
-	# all bets are off.
-	if( @epochs )
-	{
-		print "It looks like we can get by without a timezone. Lucky!\n";
-		print "ok 2\n";
-	}
-	else
-	{
-		print "**** Time Zone problem: All bets are off. ****\n";
-		print "not ok 2\n";
-	}
-	$tz = '';
-
-}
-else
-{
-	print "Your timezone is $tz.\n";
-	$tz = "log4j.appender.FILE.TZ=$tz";
-	print "ok 2\n";
-}
-
-
-my $config = <<EOT;
-
-log4j.rootLogger=DEBUG, FILE
-log4j.logger.nms=DEBUG, FILE
-
-log4j.appender.S=Log::Dispatch::Screen
-#log4j.appender.S.Threshold=FATAL
-log4j.appender.S.layout=org.apache.log4j.PatternLayout
-log4j.appender.S.layout.ConversionPattern=%d %F %-4L %-5p %c - %m%n
-
-#log4j.appender.FILE.DEBUG=1
-log4j.appender.FILE=Log::Dispatch::FileRotate
-log4j.appender.FILE.filename=myerrs.log
-log4j.appender.FILE.mode=append
-log4j.appender.FILE.size=20000
-# This is my timezone in Aus
-# log4j.appender.FILE.TZ=EADT
-# This is hopefully your timezone
-$tz
-#recurrance dates - Every Hour and Every 10mins and 1st day 4th hr of every week
-log4j.appender.FILE.DatePattern=yyyy-dd-HH; 0:0:0:0:0:10*0; 0:0:1*1:4:0:0
-#log4j.appender.FILE.DatePattern=0:0:0:0:0:1:0
-#log4j.appender.FILE.DatePattern=yyyy-dd-HH
-log4j.appender.FILE.max=5
-log4j.appender.FILE.layout=org.apache.log4j.PatternLayout
-log4j.appender.FILE.layout.ConversionPattern=%d %F %-4L %-5p %c - %m%n
-
-EOT
-
-open(CONF, "> log.conf") || die "Can't create log.conf";
-print CONF $config;
-close(CONF);
-
-Log::Log4perl::init_and_watch("log.conf",10);
-print "ok 3\n";
-
-my $logger = Log::Log4perl->get_logger('nms.cisco.utility');
-my $logger1 = Log::Log4perl->get_logger('nms');
-
-print "ok 4\n\n";
-
-print "while true; do clear;ls -ltr| grep myerrs; sleep 1; done\n\n";
-print "Type this in another xterm in this directory to see the logs
-changing. You can also edit log.conf and change params to see what will
-happen to the log files.
-
-You can also run a number of 'make test' commands to see how we behave
-with multiple writers to log files.
-
-Edit test.pl and uncomment the 'sleep 1' line if you want to
-see time rotation happening
-";
-
-my $i = 4;
-while ($i <= 65 )
-{
- $logger->debug($$ . ' this is a debug message');
- $logger->info($$  . ' this is an info message');
- $logger->warn($$  . ' etc');
- $logger->error($$ . ' ..');
- $logger->fatal($$ . ' ..');
-
- $logger1->info($$ . ' this is an info message via logger1');
- $i++;
-# sleep 1;
- print ".";
-}
-print "\n";
-print "ok 5\n";
-
-### Reproduce no-activity bug
-
-our $count = 0;
-
-my $conf = q{
-log4perl.logger                                = INFO, default
-log4perl.appender.default = Log::Dispatch::FileRotate
-log4perl.appender.default.filename             = test.log
-log4perl.appender.default.mode                 = append
-log4perl.appender.default.layout = SimpleLayout
-log4perl.appender.default.max                  = 6
-log4perl.appender.default.DatePattern          = yyyy-MM-dd-HH
+eval {
+    $tz = Date_TimeZone();
 };
-Log::Log4perl->init( \$conf );
-Log::Log4perl->appender_by_name("default")->{timer} =
-    sub { time() + $main::count * 3600 };
-# Log::Log4perl->appender_by_name("default")->{debug} = 1;
+if($@) {
+    diag 'Unable to determine timezone! Lets see if it matters..';
 
-unlink $_ for <test.log*>;
+    my $start = DateCalc("now","+ 1 second");
+    my @dates = ParseRecur('0:0:0:0:0:1*0', 'now', $start, '20 minutes later');
 
-Log::Log4perl::get_logger("")->info( "count=$count" );
-$count += 10;
-Log::Log4perl::get_logger("")->info( "count=$count" );
-Log::Log4perl::get_logger("")->info( "count=$count" );
-Log::Log4perl::get_logger("")->info( "count=$count" );
+    # Should get about 20 in the array
+    my @epochs = map { UnixDate($_,'%s') } @dates;
+    shift @epochs while @epochs && $epochs[0] <= time;
 
-if(! -f "test.log") {
-    print "not ";
+    # If no epochs left then Timezone issue is going to bite us!
+    # all bets are off.
+    if (@epochs) {
+        pass 'It looks like we can get by without a timezone. Lucky!';
+    }
+    else {
+        fail '**** Time Zone problem: All bets are off. ****';
+    }
+
+    $tz = '';
 }
-print "ok 6\n";
-
-if(! -f "test.log.1") {
-    print "not ";
+else {
+    pass "Your timezone is $tz";
 }
-print "ok 7\n";
 
-  # This shouldn't exist
-if(-f "test.log.2") {
-    print "not ";
+my $tempdir = Path::Tiny->tempdir;
+
+my $dispatcher = Log::Dispatch->new;
+isa_ok $dispatcher, 'Log::Dispatch';
+
+my $screen_logger = Log::Dispatch::Screen->new(min_level => 'emergency');
+isa_ok $screen_logger, 'Log::Dispatch::Screen';
+$dispatcher->add($screen_logger);
+
+my $file_logger = Log::Dispatch::FileRotate->new(
+    filename    => $tempdir->child('myerrs.log')->stringify,
+    min_level   => 'debug',
+    mode        => 'append',
+    size        => 20000,
+    max         => 5,
+    newline     => 1,
+    DatePattern => 'YYYY-dd-HH',
+    TZ          => $tz);
+
+isa_ok $file_logger, 'Log::Dispatch::FileRotate';
+
+$dispatcher->add($file_logger);
+
+note <<NOTE_END;
+    while true; do clear;ls -ltr | grep myerrs; sleep 1; done
+
+Type this in another terminal in this directory to see the logs changing. You
+can also edit log.conf and change params to see what will happen to the log
+files.
+
+You can also run a number of 'make test' commands to see how we behave with
+multiple writers to log files.
+
+Edit t/basic.t and uncomment the 'sleep 1' line if you want to see time
+rotation happening
+NOTE_END
+
+my @logged;
+my $logged = '';
+
+for (my $i = 4 ; $i <= 65 ; $i++) {
+    for my $level (qw(debug info notice warning error critical alert)) {
+        my $msg = "$$ this is a $level message";
+
+        $dispatcher->log(level => $level, message => $msg);
+
+        push @logged, $msg;
+    }
+    $i++;
+#   sleep 1;
 }
-print "ok 8\n";
 
-unlink $_ for <test.log*>;
+open my $logfile, '<', $tempdir->child('myerrs.log');
+
+my @logfile_lines = <$logfile>;
+
+cmp_ok scalar @logged, '==', scalar @logfile_lines,
+    'Logfile has expected number of lines';
+
+my $line_num = 1;
+while (my $line = shift @logfile_lines) {
+    chomp $line;
+    my $expected = shift @logged;
+
+    is $line, $expected, 'Logfile line '. $line_num++;
+}
+
+done_testing;
