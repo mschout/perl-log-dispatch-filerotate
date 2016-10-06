@@ -16,6 +16,9 @@ Revision history for Perl extension Log::Dispatch::FileRotate.
     - Docs: fix synopsis usage to "name" (incorrect) instead of filename
       (correct)
 
+1.21
+    [REMOVED] - accidental release, bad dist.
+
 1.20 Sat Oct 01 2016
     - Fix Date::Manip warnings about deprecated TZ config variable. If
       Date::Manip 6.x or later is installed we now use SetDate instead.
