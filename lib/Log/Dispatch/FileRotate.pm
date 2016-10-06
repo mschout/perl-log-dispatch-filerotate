@@ -303,7 +303,7 @@ sub log_message
 		warn "$$ waiting on lock\n" if $self->{debug};
 		unless($self->lfhlock())
 		{
-			warn "$$ failed to get lock. returning\n" if $self->{debug};
+			warn "$$ Log::Dispatch::FileRotate failed to get lock: ", $self->{_lfhlock_test_err}, ". Not logging.\n";
 			return;
 		}
 		warn "$$ got lock after wait\n" if $self->{debug};
@@ -723,6 +723,7 @@ sub lfhlock_test
 	}
 	else
 	{
+		$self->{_lfhlock_test_err} = "couldn't lock $self->{lf}: $!";
 		$self->{lfh} = 0;
 		warn "$$ couldn't get lock on Lock File\n" if $self->{debug};
 		return 0;
