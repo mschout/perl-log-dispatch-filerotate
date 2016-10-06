@@ -1,6 +1,6 @@
 Revision history for Perl extension Log::Dispatch::FileRotate.
 
-1.21  2016-10-05
+1.22 Thu Oct 06 2016
     - Fix minor POD error (Thanks Matthias Schmitz) [#47665]
     - Remove Log::Log4perl dependency.  The tests now use Log::Dispatch
       directly instead of going through Log4perl. [#55359]
@@ -15,6 +15,9 @@ Revision history for Perl extension Log::Dispatch::FileRotate.
       the size is in bytes, not megabytes.  [#88286]
     - Docs: fix synopsis usage to "name" (incorrect) instead of filename
       (correct)
+
+1.21
+    [REMOVED] - accidental release, bad dist.
 
 1.20 Sat Oct 01 2016
     - Fix Date::Manip warnings about deprecated TZ config variable. If
