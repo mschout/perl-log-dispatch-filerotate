@@ -830,7 +830,7 @@ Log::Dispatch::FileRotate->new() to be called by each of the writers
 close to the same time, and if your recurrences aren't too close together
 all should sync up just nicely.
 
-I initially aasumed a long runinng process but it seems people are using
+I initially assumed a long running process but it seems people are using
 this module as part of short running CGI programs. So, now we look at the
 last modified time stamp of the log file and compare it to a previous
 occurance of a DatePattern, on startup only. If the file stat shows
