@@ -389,7 +389,7 @@ sub DESTROY
 
 	# Clean up locks
 	close $self->{lfh} if $self->{lfh};
- 	unlink $self->{lf} if -f $self->{lf};
+ 	unlink $self->{lf} if $self->{lf} && -f $self->{lf};
 }
 
 sub logit
