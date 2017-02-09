@@ -30,11 +30,11 @@ The name of the object (not the filename!).  Required.
 
 =item -- size ($)
 
-The maxium (or close to) size the log file can grow too.
+The maximum (or close to) size the log file can grow too.
 
 =item -- max ($)
 
-The maxium number of log files to create.
+The maximum number of log files to create.
 
 
 =item -- TZ ($)
