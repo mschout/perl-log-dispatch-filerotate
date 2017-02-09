@@ -1,6 +1,8 @@
 Revision history for Perl extension Log::Dispatch::FileRotate.
 
 {{$NEXT}}
+
+1.23 Thu Feb 09 2017
     - Issue a warning if the lockfile cannot be opened (Thanks KGOESS)
       [#63544]
     - Fix POD typo (Thanks Anirvan Chatterjee)
