@@ -903,6 +903,16 @@ compression, signal based rotates, proper test suite
 
 Could possibly use Logfile::Rotate as well/instead.
 
+=head1 SEE ALSO
+
+=over 4
+
+=item *
+
+L<Log::Dispatch::File::Stamped> - log directly to timestamped files
+
+=back
+
 =head1 HISTORY
 
 Originally written by Mark Pfeiffer, <markpf at mlp-consulting dot com dot au>
