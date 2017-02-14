@@ -9,6 +9,19 @@ use Test::More 0.88;
 use Path::Tiny 0.018;
 use Test::Warn;
 
+# we need to make sure we are in the correct locale so that we get "Permission
+# denied" as the error message, not a translation of that into another locale
+
+unless (eval { require POSIX; 1 }) {
+    plan skip_all => 'POSIX module is required for this test';
+}
+
+my $locale = 'en_US.UTF-8';
+my $curloc = POSIX::setlocale(&POSIX::LC_ALL, $locale) || '';
+unless ($curloc eq $locale) {
+    plan skip_all => "locale $locale is not available on this system";
+}
+
 use_ok 'Log::Dispatch::FileRotate';
 
 my $tempdir = Path::Tiny->tempdir;

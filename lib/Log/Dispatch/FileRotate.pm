@@ -1,5 +1,5 @@
 package Log::Dispatch::FileRotate;
-$Log::Dispatch::FileRotate::VERSION = '1.23';
+$Log::Dispatch::FileRotate::VERSION = '1.24';
 # ABSTRACT: Log to Files that Archive/Rotate Themselves
 
 require 5.005;
@@ -74,7 +74,7 @@ sub new
 		# compat with 5.8, we use TZ if setdate is not avilable.  Otherwise we
 		# use setdate.
 		require version;
-		if (version->parse($Date::Manip::VERSION) < version->parse('6.0'))
+		if (version->parse(DateManipVersion()) < version->parse('6.0'))
 		{
 			Date_Init("TZ=".$p{'TZ'});
 		}
@@ -677,7 +677,7 @@ Log::Dispatch::FileRotate - Log to Files that Archive/Rotate Themselves
 
 =head1 VERSION
 
-version 1.23
+version 1.24
 
 =head1 SYNOPSIS
 
