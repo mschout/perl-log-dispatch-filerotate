@@ -8,6 +8,11 @@ use warnings;
 use Test::More 0.88;
 use Path::Tiny 0.018;
 use Test::Warn;
+use Fcntl qw(LOCK_EX LOCK_UN);
+
+if ($> == 0) {
+    plan skip_all => 'root user is exempt from file RW permissions restrictions';
+}
 
 use_ok 'Log::Dispatch';
 use_ok 'Log::Dispatch::FileRotate';
