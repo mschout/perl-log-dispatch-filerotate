@@ -16,6 +16,10 @@ unless (eval { require POSIX; 1 }) {
     plan skip_all => 'POSIX module is required for this test';
 }
 
+if ($> == 0) {
+    plan skip_all => 'root user is exempt from file RW permissions restrictions';
+}
+
 my $locale = 'en_US.UTF-8';
 my $curloc = POSIX::setlocale(&POSIX::LC_ALL, $locale) || '';
 unless ($curloc eq $locale) {

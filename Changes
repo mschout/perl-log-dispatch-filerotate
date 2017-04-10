@@ -1,5 +1,8 @@
 Revision history for Perl extension Log::Dispatch::FileRotate.
 
+1.25 Mon Apr 10 2017
+    - Fix test failures if the test suite is running as root user.
+
 1.24 Tue Feb 14 2017
     - fix test failure on file-open-failure.t related to current locale
       setting.
