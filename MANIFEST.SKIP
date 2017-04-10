@@ -14,3 +14,4 @@ error_log
 ^MYMETA
 ^log\.conf$
 ^myerrs\.
+^\.travis.yml$
