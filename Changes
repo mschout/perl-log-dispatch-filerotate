@@ -1,6 +1,8 @@
 Revision history for Perl extension Log::Dispatch::FileRotate.
 
 {{$NEXT}}
+
+1.26 Tue May 09 2017
     - add SEE ALSO reference to Log::Dispath::File::Stamped (Thanks Karen
       Etheridge)
 
