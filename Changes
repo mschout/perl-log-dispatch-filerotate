@@ -5,6 +5,7 @@ Revision history for Perl extension Log::Dispatch::FileRotate.
       size based rotation at the same time.  If either conditions require a
       rotation, a rotation will happen.  Default is false (previous behaviour).
       Thanks Emanuele Tomasi.  PR #6.
+    - make signature test an "author" test and make Test::Signature optional
 
 1.26 Tue May 09 2017
     - add SEE ALSO reference to Log::Dispath::File::Stamped (Thanks Karen
