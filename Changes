@@ -1,6 +1,8 @@
 Revision history for Perl extension Log::Dispatch::FileRotate.
 
 {{$NEXT}}
+
+1.27 Thu Jul 06 2017
     - add "check_both" configuration option which allows the use of both time and
       size based rotation at the same time.  If either conditions require a
       rotation, a rotation will happen.  Default is false (previous behaviour).
