@@ -1,6 +1,8 @@
 Revision history for Perl extension Log::Dispatch::FileRotate.
 
 {{$NEXT}}
+
+1.28 Thu Jul 27 2017
     *** Multiple fixes to locking code:
     - flock() can be interrupted by a syscall. work around by using a
       safe_flock() wrapper that retries if errno is EAGAIN (and also
