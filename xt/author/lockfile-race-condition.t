@@ -79,7 +79,7 @@ sub run_processes {
     };
 
     my $file = Log::Dispatch::FileRotate->new(
-        filename  => 'test.log',
+        filename  => $tempdir->child('test.log')->stringify,
         min_level => 'info',
         DEBUG     => 1);
 
