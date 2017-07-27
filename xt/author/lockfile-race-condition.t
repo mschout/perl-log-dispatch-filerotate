@@ -31,7 +31,7 @@ shim_logit_delay();
 my $tempdir = Path::Tiny->tempdir;
 my $warnings_file = $tempdir->child('warnings.txt')->stringify;
 
-my $pid = fork;
+$pid = fork;
 if (!defined $pid) {
     die "fork failed: $!\n";
 }
