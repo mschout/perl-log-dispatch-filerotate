@@ -1,6 +1,8 @@
 Revision history for Perl extension Log::Dispatch::FileRotate.
 
 {{$NEXT}}
+
+1.29 Fri Jul 28 2017
     - Fix deadlock on Windows due to the fact that stat() on a filehandle vs a
       path doesn't return the same device field on Windows.
 
