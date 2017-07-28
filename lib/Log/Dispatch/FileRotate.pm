@@ -1,5 +1,5 @@
 package Log::Dispatch::FileRotate;
-$Log::Dispatch::FileRotate::VERSION = '1.28';
+$Log::Dispatch::FileRotate::VERSION = '1.29';
 # ABSTRACT: Log to Files that Archive/Rotate Themselves
 
 require 5.005;
@@ -630,8 +630,18 @@ sub flopen {
 			return;
 		}
 
+		unless ($^O =~ /^MSWin/) {
+			# stat on a filehandle and path return different "dev" and "rdev"
+			# fields on windows
+			if ($path_stat[0] != $fh_stat[0]) {
+				# file was changed under our feet. try again;
+				close $fh;
+				next;
+			}
+		}
+
 		# check that device and inode are the same for the path and fh
-		if ($path_stat[0] != $fh_stat[0] or $path_stat[1] != $fh_stat[1])
+		if ($path_stat[1] != $fh_stat[1])
 		{
 			# file was changed under our feet. try again;
 			close $fh;
@@ -663,8 +673,6 @@ sub debug
 	$_[0]->{'debug'} = $_[1];
 }
 
-__END__
-
 =pod
 
 =head1 NAME
@@ -673,7 +681,7 @@ Log::Dispatch::FileRotate - Log to Files that Archive/Rotate Themselves
 
 =head1 VERSION
 
-version 1.28
+version 1.29
 
 =head1 SYNOPSIS
 
@@ -956,3 +964,8 @@ This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.
 
 =cut
+
+__END__
+
+
+# vim: noet
