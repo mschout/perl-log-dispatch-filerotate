@@ -730,8 +730,18 @@ sub flopen {
 			return;
 		}
 
+		unless ($^O =~ /^MSWin/) {
+			# stat on a filehandle and path return different "dev" and "rdev"
+			# fields on windows
+			if ($path_stat[0] != $fh_stat[0]) {
+				# file was changed under our feet. try again;
+				close $fh;
+				next;
+			}
+		}
+
 		# check that device and inode are the same for the path and fh
-		if ($path_stat[0] != $fh_stat[0] or $path_stat[1] != $fh_stat[1])
+		if ($path_stat[1] != $fh_stat[1])
 		{
 			# file was changed under our feet. try again;
 			close $fh;
@@ -928,3 +938,5 @@ forked environment.
 And thanks to Stephen Gordon for his more portable code on lockfile naming.
 
 =cut
+
+# vim: noet
