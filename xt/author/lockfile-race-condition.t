@@ -70,7 +70,8 @@ sub run_processes {
 
         # we only want the "got lock" and "exiting" lines
         if ($msg =~ /got lock/ or $msg =~ /exiting/) {
-            # strip off pid numbers from front of message
+            # strip off dates and pid numbers from front of message
+            $msg = substr($msg, 25);
             $msg =~ s/^[0-9]+ //;
 
             # save in the warnings file
@@ -99,7 +100,7 @@ sub run_processes {
         }
     }
 
-    warn "$$ exiting\n";
+    warn localtime() . " $$ exiting\n";
 
     delete $SIG{__WARN__};
     close $warnfh;

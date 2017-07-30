@@ -110,7 +110,8 @@ sub new
 
     my $self = bless {}, $class;
 
-	$self->{'debug'} = 0;
+	# Turn ON/OFF debugging as required
+	$self->{debug} = $p{DEBUG};
     $self->_basic_init(%p);
     $self->{'LDF'} =  Log::Dispatch::File->new(%p);  # Our log
 	$self->{'timer'} = sub { time() } unless defined $self->{'timer'};
@@ -118,9 +119,6 @@ sub new
 	# Keep a copy of interesting stuff as well
 	$self->{params} = \%p;
 
-	# Turn ON/OFF debugging as required
-	$p{'DEBUG'} ? $self->debug(1) : $self->debug(0);
-	
 	# Size defaults to 10meg in all failure modes, hopefully
 	my $ten_meg = 1024*1024*10;
 	my $two_gig = 1024*1024*1024*2;
@@ -145,7 +143,7 @@ sub new
 	$f = $name unless $f;
 
 	my $lockfile = File::Spec->catpath($vol, $dir, ".".$f.".LCK");
-	warn "Lock file is $lockfile\n" if $self->{'debug'};
+	$self->debug("Lock file is $lockfile");
 	$self->{lf} = $lockfile;
 
 	# Have we been called with a time based rotation pattern then setup
@@ -274,7 +272,7 @@ sub setDatePattern
 		}
 
 		my $abs = $self->_get_next_occurance($pat);
-		warn "Adding [dates,pat] =>[$abs,$pat]\n" if $self->{debug};
+		$self->debug("Adding [dates,pat] =>[$abs,$pat]");
 		my $ref = [$abs, $pat];
 		push(@{$self->{'recurrance'}}, $ref);
 
@@ -313,15 +311,15 @@ sub log_message
 		return;
 	}
 
-	warn "$$ got lock\n" if $self->{debug};
+	$self->debug("got lock");
 
 	my $have_to_rotate = 0;
 	my $size   = (stat($fh))[7];   # Stat the handle to get real size
 	my $inode  = (stat($fh))[1];   # get real inode
 	my $finode = (stat($name))[1]; # Stat the name for comparision
-	warn localtime()." $$  s=$size, i=$inode, f=".
+	$self->debug("s=$size, i=$inode, f=".
 			(defined $finode ? $finode : "undef") .
-			 ", n=$name\n" if $self->{debug};
+			", n=$name");
 
 	# If finode and inode are the same then nobody has done a rename
 	# under us and we can continue. Otherwise just close and reopen.
@@ -331,7 +329,7 @@ sub log_message
 		delete $self->{LDF};  # Should get rid of current LDF
 		$self->{LDF} =  Log::Dispatch::File->new(%{$self->{params}});  # Our log
 
-		warn localtime()." $$ Someone else rotated: normal log\n" if $self->{debug};
+		$self->debug("Someone else rotated: normal log");
 	}
 	else
 	{
@@ -344,9 +342,9 @@ sub log_message
 			$have_to_rotate = 1;
 		}
 
-		warn localtime()." $$ in time mode: $in_time_mode; time to rotate: $time_to_rotate;"
+		$self->debug("in time mode: $in_time_mode; time to rotate: $time_to_rotate;"
 			." rotate by size: $rotate_by_size; check_both: $check_both;"
-			." have to rotate: $have_to_rotate\n" if $self->{debug};
+			." have to rotate: $have_to_rotate");
 	}
 
 	if($have_to_rotate)
@@ -356,29 +354,29 @@ sub log_message
 
 		my $idx = $numfiles -1;
 
-		warn localtime() . " $$ Rotating\n" if $self->{debug};
+		$self->debug("Rotating");
 		while($idx >= 0)
 		{
 			if($idx <= 0)
 			{
-				warn "$$ rename $name $name.1\n" if $self->{debug};
+				$self->debug("rename $name $name.1");
 				rename($name, "$name.1");
 			}
 			else
 			{
-				warn "$$ rename $name.$idx $name.".($idx+1)."\n" if $self->{debug};
+				$self->debug("rename $name.$idx $name.".($idx+1));
 				rename("$name.$idx", "$name.".($idx+1));
 			}
 
 			$idx--;
 		}
-		warn localtime() . " $$ Rotating Done\n" if $self->{debug}; 
+		$self->debug("Rotating Done");
 
 		# reopen the logfile for writing.
 		$self->{LDF} =  Log::Dispatch::File->new(%{$self->{params}});  # Our log
 
 		# Write it out
-		warn localtime()." $$ rotated: normal log\n" if $self->{debug};
+		$self->debug("rotated: normal log");
 	}
 
 	$self->logit($p{message});
@@ -474,13 +472,13 @@ sub time_to_rotate
 				if($ftime <= $abs)
 				{
 					# Then we need to rotate
-					warn "Need rotate file($ftime) <= $abs\n" if $self->{debug};
+					$self->debug("Need rotate file($ftime) <= $abs");
 					$rotate++;
 					$dorotate++;  # Just for debugging
 				}
 
 				# Move to next occurance regardless
-				warn "Dropping initial occurance($abs)\n" if $self->{debug};
+				$self->debug("Dropping initial occurance($abs)");
 				$abs = $self->_get_next_occurance($pat);
 				unless(defined $abs && $abs)
 				{
@@ -493,7 +491,7 @@ sub time_to_rotate
 			elsif($abs <= $tm)
 			{
 				# Then we need to rotate
-				warn "Need rotate $abs <= $tm\n" if $self->{debug};
+				$self->debug("Need rotate $abs <= $tm");
 				$abs = $self->_get_next_occurance($pat);
 				unless(defined $abs && $abs)
 				{
@@ -504,14 +502,14 @@ sub time_to_rotate
 				$dorotate++;  # Just for debugging
 			}
 			push(@{$self->{'recurrance'}},[$abs,$pat]) if $abs;
-			warn "time_to_rotate(mode,rotate,next) => ($mode,$dorotate,$abs)\n" if $self->{debug};
+			$self->debug("time_to_rotate(mode,rotate,next) => ($mode,$dorotate,$abs)");
 		}
 		
 	}
 
 	$self->{'new'} = 0;  # No longer brand-spankers
 
-	warn "time_to_rotate(mode,rotate) => ($mode,$rotate)\n" if $self->{debug};
+	$self->debug("time_to_rotate(mode,rotate) => ($mode,$rotate)");
 	return wantarray ? ($mode,$rotate) : $rotate;
 }
 
@@ -577,7 +575,7 @@ sub _gen_occurance
 	# we may rotate for every message we recieve with in this second :-(
 	my $start = DateCalc($base,"+ 1 second");
 
-	warn "ParseRecur($pat,$base,$start,$range);\n" if $self->{debug};
+	$self->debug("ParseRecur($pat,$base,$start,$range);");
 	my @dates = ParseRecur($pat,$base,$start,$range);
 
 	# Just in case we have a bad parse or our assumptions are wrong.
@@ -600,10 +598,7 @@ sub _gen_occurance
 	{
 		my($y,$m,$d,$h,$mn,$s) = Date::Manip::UnixDate($_, @a);
 		my $e = Date_SecsSince1970GMT($m,$d,$y,$h,$mn,$s);
-		if( $self->{debug} )
-		{
-			warn "Date to epochs ($_) => ($e)\n";
-		}
+		$self->debug("Date to epochs ($_) => ($e)");
 		push @epochs, $e;
 	}
 
@@ -628,10 +623,8 @@ sub _gen_occurance
 		shift(@epochs) while @epochs && ( $epochs[0] <= $now);
 	}
 
-	if($self->{debug})
-	{
-		warn "Recurrances are at: ".join("\n\t", @dates),"\n";
-	}
+	$self->debug("Recurrances are at: ".join("\n\t", @dates));
+
 	warn "No recurrances found! Probably a timezone issue!\n" unless @dates;
 
 	return @epochs;
@@ -688,15 +681,16 @@ sub lock
 	# Make sure we are at the EOF
 	seek($self->{LDF}->{fh}, 0, 2);
 
-	warn localtime() ." $$ Locked\n" if $self->{debug};
+	$self->debug("Locked");
 	return;
 }
 
 sub unlock 
 {
 	my $self = shift;
+
 	safe_flock($self->{LDF}->{fh},LOCK_UN);
-	warn localtime() . " $$ unLocked\n" if $self->{debug};
+	$self->debug("unLocked");
 }
 
 # Inspired by BSD's flopen(), returns filehandle on success
@@ -717,7 +711,6 @@ sub flopen {
 		}
 
 		my @path_stat = stat $path;
-
 		unless (@path_stat) {
 			# file disappeared fron under our feet
 			close $fh;
@@ -770,7 +763,14 @@ sub safe_flock {
 
 sub debug
 {
-	$_[0]->{'debug'} = $_[1];
+	my $self = shift;
+	my ($message) = @_;
+
+	return unless($self->{debug});
+
+	warn localtime() . " $$ $message\n";
+
+	return;
 }
 
 __END__
