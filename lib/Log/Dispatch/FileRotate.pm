@@ -294,6 +294,33 @@ sub log_message
     my $self = shift;
     my %p = @_;
 
+    my $lfh = $self->rotate(1);
+    if(!defined($lfh)) {
+      warn "$$ Log::Dispatch::FileRotate not logging";
+      return;
+    }
+    $self->debug("normal log");
+
+    $self->logit($p{message});
+
+    $self->debug("releasing lock");
+    flclose($lfh);
+}
+
+=method rotate()
+
+Rotates the file, if it has to be done. You can call this method if you want to
+check, and eventually do, a rotation without logging anything.
+
+Returns 1 if a rotation was done, 0 otherwise. C<undef> on error.
+
+=cut
+
+sub rotate
+{
+	my $self = shift;
+	my ($hold_lock) = @_; # internal use only.
+
 	my $max_size = $self->{size};
 	my $numfiles = $self->{max};
 	my $name     = $self->{params}->{filename};
@@ -307,8 +334,8 @@ sub log_message
 	# work properly if the logfile was opened in a parent process for example.
 	my $lfh;
 	unless ($lfh = flopen($self->{lf})) {
-		warn "$$ Log::Dispatch::FileRotate failed to get lock: $!. Not logging.\n";
-		return;
+		warn "$$ Log::Dispatch::FileRotate failed to get lock: $!\n";
+		return undef;
 	}
 
 	$self->debug("got lock");
@@ -329,7 +356,7 @@ sub log_message
 		delete $self->{LDF};  # Should get rid of current LDF
 		$self->{LDF} =  Log::Dispatch::File->new(%{$self->{params}});  # Our log
 
-		$self->debug("Someone else rotated: normal log");
+		$self->debug("Someone else rotated");
 	}
 	else
 	{
@@ -376,13 +403,14 @@ sub log_message
 		$self->{LDF} =  Log::Dispatch::File->new(%{$self->{params}});  # Our log
 
 		# Write it out
-		$self->debug("rotated: normal log");
+		$self->debug("rotated");
 	}
 
-	$self->logit($p{message});
+	return $lfh if ($hold_lock);
 
 	$self->debug("releasing lock");
-	safe_flock($lfh, LOCK_UN);
+	flclose($lfh);
+	return $have_to_rotate;
 }
 
 sub DESTROY
@@ -744,6 +772,13 @@ sub flopen {
 
 		return $fh;
 	}
+}
+
+sub flclose {
+	my ($fh) = @_;
+
+	safe_flock($fh, LOCK_UN);
+	close($fh);
 }
 
 sub safe_flock {
