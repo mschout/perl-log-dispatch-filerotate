@@ -51,6 +51,11 @@ The DatePattern as defined above.
 
 1 for checking both constrains, 0 otherwise (the default).
 
+=item -- user_constraint (\&)
+
+If this callback is defined and returns true, a rotation will happen
+unconditionally.
+
 =item -- min_level ($)
 
 The minimum logging level this object will accept.  See the
@@ -171,6 +176,9 @@ sub new
 	}
 
 	$self->{check_both} = ($p{check_both}) ? 1 : 0;
+
+	# User callback to rotate the file.
+	$self->{user_constraint} = $p{user_constraint};
 
 	# Flag this as first creation point
 	$self->{'new'} = 1;
@@ -329,6 +337,17 @@ sub rotate
 	# Prime our time based data outside the critical code area
 	my ($in_time_mode,$time_to_rotate) = $self->time_to_rotate();
 
+	my $user_rotation = 0;
+	if (ref($self->{user_constraint}) eq 'CODE') {
+		eval {
+			$user_rotation = &{$self->{user_constraint}}();
+
+			1;
+		} or do {
+			$self->error("user's callback error: $@");
+		};
+	}
+
 	# Handle critical code for logging. No changes if someone else is in.  We
 	# lock a lockfile, not the actual log filehandle because locking doesn't
 	# work properly if the logfile was opened in a parent process for example.
@@ -364,14 +383,15 @@ sub rotate
 		my $rotate_by_size = ($size >= $max_size) ? 1 : 0;
 		if(($in_time_mode && $time_to_rotate) ||
 		   (!$in_time_mode && $rotate_by_size) ||
-		   ($rotate_by_size && $check_both))
+		   ($rotate_by_size && $check_both) ||
+		   ($user_rotation))
 		{
 			$have_to_rotate = 1;
 		}
 
 		$self->debug("in time mode: $in_time_mode; time to rotate: $time_to_rotate;"
 			." rotate by size: $rotate_by_size; check_both: $check_both;"
-			." have to rotate: $have_to_rotate");
+			." user rotation: $user_rotation; have to rotate: $have_to_rotate");
 	}
 
 	if($have_to_rotate)
