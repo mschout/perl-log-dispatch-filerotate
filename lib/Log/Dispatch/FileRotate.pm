@@ -373,9 +373,8 @@ sub rotate
 	$self->debug("got lock");
 
 	my $have_to_rotate = 0;
-	my $size   = (stat($fh))[7];   # Stat the handle to get real size
-	my $inode  = (stat($fh))[1];   # get real inode
-	my $finode = (stat($name))[1]; # Stat the name for comparision
+	my ($inode, $size)   = (stat($fh))[1,7]; # real inode and size
+	my $finode = (stat($name))[1]; # inode of filename for comparision
 	$self->debug("s=$size, i=$inode, f=".
 			(defined $finode ? $finode : "undef") .
 			", n=$name");
