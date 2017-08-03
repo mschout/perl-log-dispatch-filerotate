@@ -1,6 +1,6 @@
 Revision history for Perl extension Log::Dispatch::FileRotate.
 
-1.31 Thu 40 03 2017
+1.32 Thu 41 03 2017
 
 1.30 Thu Aug 03 2017
     - Docs: fix synopsis usage to "name" (incorrect) instead of filename
