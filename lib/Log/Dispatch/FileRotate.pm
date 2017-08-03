@@ -186,6 +186,19 @@ sub new
     return $self;
 }
 
+=method filename()
+
+Returns the log filename.
+
+=cut
+
+sub filename
+{
+	my $self = shift;
+
+	return $self->{params}->{filename};
+}
+
 =method setDatePattern( $ or [ $, $, ... ] )
 
 Set a new suite of recurrances for file rotation. You can pass in a
@@ -331,7 +344,7 @@ sub rotate
 
 	my $max_size = $self->{size};
 	my $numfiles = $self->{max};
-	my $name     = $self->{params}->{filename};
+	my $name     = $self->filename();
 	my $fh       = $self->{LDF}->{fh};
 
 	# Prime our time based data outside the critical code area
@@ -399,31 +412,12 @@ sub rotate
 		# Shut down the log
 		delete $self->{LDF};  # Should get rid of current LDF
 
-		my $idx = $numfiles -1;
-
 		$self->debug("Rotating");
-		while($idx >= 0)
-		{
-			if($idx <= 0)
-			{
-				$self->debug("rename $name $name.1");
-				rename($name, "$name.1");
-			}
-			else
-			{
-				$self->debug("rename $name.$idx $name.".($idx+1));
-				rename("$name.$idx", "$name.".($idx+1));
-			}
-
-			$idx--;
-		}
+		$self->_for_each_file(\&_move_file);
 		$self->debug("Rotating Done");
 
 		# reopen the logfile for writing.
 		$self->{LDF} =  Log::Dispatch::File->new(%{$self->{params}});  # Our log
-
-		# Write it out
-		$self->debug("rotated");
 	}
 
 	return $lfh if ($hold_lock);
@@ -431,6 +425,42 @@ sub rotate
 	$self->debug("releasing lock");
 	flclose($lfh);
 	return $have_to_rotate;
+}
+
+sub _for_each_file
+{
+	my $self = shift;
+	my ($callback) = @_;
+
+	my $basename = $self->filename();
+	my $idx = $self->{max} - 1;
+	while($idx >= 0)
+	{
+		my $filename = $basename;
+		$filename .= ".$idx" if ($idx);
+		eval {
+			&{$callback}($filename, $idx, $self) if (-f $filename);
+
+			1;
+		} or do {
+			$self->error("callback error: $@");
+		};
+		$idx--;
+	}
+
+	return undef;
+}
+
+sub _move_file
+{
+	my ($filename, $idx, $fileRotate) = @_;
+
+	my $basename = $fileRotate->filename();
+	my $newfile = $basename . '.' . ($idx+1);
+	$fileRotate->debug("rename $filename $newfile");
+	rename($filename, $newfile);
+
+	return undef;
 }
 
 sub DESTROY
@@ -816,6 +846,13 @@ sub safe_flock {
 		}
 	}
 }
+
+
+=method debug($)
+
+Prints a warn message.
+
+=cut
 
 sub debug
 {
