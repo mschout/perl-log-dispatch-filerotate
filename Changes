@@ -1,6 +1,8 @@
 Revision history for Perl extension Log::Dispatch::FileRotate.
 
 {{$NEXT}}
+
+1.30 Thu Aug 03 2017
     - Docs: fix synopsis usage to "name" (incorrect) instead of filename
       (correct) (Thanks Emanuele Tomasi)
     - improve debug() routine so that all debug messages have the same layout
