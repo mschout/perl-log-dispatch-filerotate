@@ -381,6 +381,7 @@ sub log_message
 
 	$self->logit($p{message});
 
+	$self->debug("releasing lock");
 	safe_flock($lfh, LOCK_UN);
 }
 
