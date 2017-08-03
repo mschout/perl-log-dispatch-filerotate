@@ -296,7 +296,7 @@ sub log_message
 
     my $lfh = $self->rotate(1);
     if(!defined($lfh)) {
-      warn "$$ Log::Dispatch::FileRotate not logging";
+      $self->error("not logging");
       return;
     }
     $self->debug("normal log");
@@ -334,7 +334,7 @@ sub rotate
 	# work properly if the logfile was opened in a parent process for example.
 	my $lfh;
 	unless ($lfh = flopen($self->{lf})) {
-		warn "$$ Log::Dispatch::FileRotate failed to get lock: $!\n";
+		$self->error("failed to get lock: $!");
 		return undef;
 	}
 
@@ -807,6 +807,15 @@ sub debug
 	warn localtime() . " $$ $message\n";
 
 	return;
+}
+
+sub error
+{
+	my $self = shift;
+	my ($message)= @_;
+
+	chomp($message);
+	warn "$$ " . __PACKAGE__ . " $message\n";
 }
 
 __END__
