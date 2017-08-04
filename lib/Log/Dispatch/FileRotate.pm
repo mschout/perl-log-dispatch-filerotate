@@ -939,8 +939,6 @@ constraints without logging anything.
 To let more power at the user, a C<post_rotate> callback it'll call after every
 rotation.
 
-=back
-
 =head2 Concurrency
 
 Multiple writers are allowed by this module. There is a restricted area where
@@ -989,8 +987,6 @@ last modified time stamp of the log file and compare it to a previous
 occurance of a L</DatePattern>, on startup only. If the file stat shows
 the mtime to be earlier than the previous recurrance then I rotate the
 log file.
-
-=back
 
 =head1 DatePattern
 
