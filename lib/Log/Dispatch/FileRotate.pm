@@ -56,6 +56,44 @@ The DatePattern as defined above.
 If this callback is defined and returns true, a rotation will happen
 unconditionally.
 
+=item -- post_rotate (\&)
+
+This callback is called after that all files were rotated. Will be called one
+time for every rotated file (in reverse order) with this arguments:
+
+=over 4
+
+C<filename>: the path of the rotated file;
+
+C<index>: the index of the rotated file from C<max>-1 to 0, in the latter
+case C<filename> is the new, empty, log file;
+
+C<fileRotate>: a object reference to this instance;
+
+=back
+
+With this, you can have infinite files renaming each time the rotated file
+log. E.g:
+
+  my $file = Log::Dispatch::FileRotate
+  ->new(
+        ...
+        post_rotate => sub {
+          my ($filename, $idx, $fileRotate) = @_;
+          if ($idx == 1) {
+            use POSIX qw(strftime);
+            my $basename = $fileRotate->filename();
+            my $newfilename =
+              $basename . '.' . strftime('%Y%m%d%H%M%S', localtime());
+            $fileRotate->debug("moving $filename to $newfilename");
+            rename($filename, $newfilename);
+          }
+        },
+       );
+
+B<Note>: this is called within the restricted area. This means that any other
+concurrent process is locked in the meanwhile.
+
 =item -- min_level ($)
 
 The minimum logging level this object will accept.  See the
@@ -179,6 +217,9 @@ sub new
 
 	# User callback to rotate the file.
 	$self->{user_constraint} = $p{user_constraint};
+
+	# A post rotate callback.
+	$self->{post_rotate} = $p{post_rotate};
 
 	# Flag this as first creation point
 	$self->{'new'} = 1;
@@ -417,12 +458,18 @@ sub rotate
 
 		# reopen the logfile for writing.
 		$self->{LDF} =  Log::Dispatch::File->new(%{$self->{params}});  # Our log
+
+		if (ref($self->{post_rotate}) eq 'CODE') {
+			$self->debug("Calling user post-rotate callback");
+			$self->_for_each_file($self->{post_rotate});
+		}
 	}
 
 	return $lfh if ($hold_lock);
 
 	$self->debug("releasing lock");
 	flclose($lfh);
+
 	return $have_to_rotate;
 }
 
