@@ -43,7 +43,8 @@ chmod 0, $lockfile;
 
 warning_like {
     $dispatcher->info('Write with unsuccessful lock');
-} qr/\d+ Log::Dispatch::FileRotate failed to get lock/;
+} [qr/\d+ Log::Dispatch::FileRotate failed to get lock/,
+   qr/\d+ Log::Dispatch::FileRotate not logging/];
 
 open my $fh, '<', $tempdir->child('myerrs.log')->stringify or die "can't open logfile: $!";
 my $content = do { local $/ = undef; <$fh> };

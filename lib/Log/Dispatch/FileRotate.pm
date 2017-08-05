@@ -20,77 +20,76 @@ Params::Validate::validation_options( allow_extra => 1 );
 
 =method new(%p)
 
-This method takes a hash of parameters.  The following options are
-valid:
+The constructor takes the following parameters in addition to parameters
+documented in L<Log::Dispatch::File>:
 
 =over 4
 
-=item -- name ($)
+=item -- max ($)
 
-The name of the object (not the filename!).  Required.
+The maximum number of log files to create. Default 1.
 
 =item -- size ($)
 
-The maximum (or close to) size the log file can grow too.
+The maximum (or close to) size the log file can grow too. Default 10M.
 
-=item -- max ($)
+=item -- DatePattern ($)
 
-The maximum number of log files to create.
-
+The L</DatePattern> as defined above.
 
 =item -- TZ ($)
 
 The TimeZone time based calculations should be done in. This should match
-Date::Manip's concept of timezones and of course your machines timezone.
-
-=item -- DatePattern ($)
-
-The DatePattern as defined above.
+L<Date::Manip>'s concept of timezones and of course your machines timezone.
 
 =item -- check_both ($)
 
-1 for checking both constrains, 0 otherwise (the default).
+1 for checking L</DatePattern> and size concurrently, 0 otherwise (the default).
 
-=item -- min_level ($)
+=item -- user_constraint (\&)
 
-The minimum logging level this object will accept.  See the
-Log::Dispatch documentation for more information.  Required.
+If this callback is defined and returns true, a rotation will happen
+unconditionally.
 
-=item -- max_level ($)
+=item -- post_rotate (\&)
 
-The maximum logging level this obejct will accept.  See the
-Log::Dispatch documentation for more information.  This is not
-required.  By default the maximum is the highest possible level (which
-means functionally that the object has no maximum).
+This callback is called after that all files were rotated. Will be called one
+time for every rotated file (in reverse order) with this arguments:
 
-=item -- filename ($)
+=over 4
 
-The filename to be opened for writing. This is the base name. Rotated log
-files will be renamed filename.1 thru to filename.C<max>. Where max is the
-paramater defined above.
+C<filename>: the path of the rotated file;
 
-=item -- mode ($)
+C<index>: the index of the rotated file from C<max>-1 to 0, in the latter
+case C<filename> is the new, empty, log file;
 
-The mode the file should be opened with.  Valid options are 'write',
-'>', 'append', '>>', or the relevant constants from Fcntl.  The
-default is 'write'.
+C<fileRotate>: a object reference to this instance;
 
-=item -- autoflush ($)
+=back
 
-Whether or not the file should be autoflushed.  This defaults to true.
+With this, you can have infinite files renaming each time the rotated file
+log. E.g:
 
-=item -- callbacks( \& or [ \&, \&, ... ] )
+  my $file = Log::Dispatch::FileRotate
+  ->new(
+        ...
+        post_rotate => sub {
+          my ($filename, $idx, $fileRotate) = @_;
+          if ($idx == 1) {
+            use POSIX qw(strftime);
+            my $basename = $fileRotate->filename();
+            my $newfilename =
+              $basename . '.' . strftime('%Y%m%d%H%M%S', localtime());
+            $fileRotate->debug("moving $filename to $newfilename");
+            rename($filename, $newfilename);
+          }
+        },
+       );
 
-This parameter may be a single subroutine reference or an array
-reference of subroutine references.  These callbacks will be called in
-the order they are given and passed a hash containing the following keys:
-
- ( message => $log_message, level => $log_level )
-
-The callbacks are expected to modify the message and then return a
-single scalar containing that modified message.  These callbacks will
-be called when either the C<log> or C<log_to> methods are called and
-will only be applied to a given message once.
+B<Note>: this is called within the restricted area (see L</Concurrency>). This
+means that any other concurrent process is locked in the meanwhile. For the
+same reason, don't use the C<log()> or C<log_message()> methods because you
+will get a deadlock!
 
 =item -- DEBUG ($)
 
@@ -172,10 +171,29 @@ sub new
 
 	$self->{check_both} = ($p{check_both}) ? 1 : 0;
 
+	# User callback to rotate the file.
+	$self->{user_constraint} = $p{user_constraint};
+
+	# A post rotate callback.
+	$self->{post_rotate} = $p{post_rotate};
+
 	# Flag this as first creation point
 	$self->{'new'} = 1;
 
     return $self;
+}
+
+=method filename()
+
+Returns the log filename.
+
+=cut
+
+sub filename
+{
+	my $self = shift;
+
+	return $self->{params}->{filename};
 }
 
 =method setDatePattern( $ or [ $, $, ... ] )
@@ -285,7 +303,7 @@ sub setDatePattern
 
 Sends a message to the appropriate output.  Generally this shouldn't
 be called directly but should be called through the C<log()> method
-(in Log::Dispatch::Output).
+(in L<Log::Dispatch::Output>).
 
 =cut
 
@@ -294,29 +312,66 @@ sub log_message
     my $self = shift;
     my %p = @_;
 
+    my $lfh = $self->rotate(1);
+    if(!defined($lfh)) {
+      $self->error("not logging");
+      return;
+    }
+    $self->debug("normal log");
+
+    $self->logit($p{message});
+
+    $self->debug("releasing lock");
+    flclose($lfh);
+}
+
+=method rotate()
+
+Rotates the file, if it has to be done. You can call this method if you want to
+check, and eventually do, a rotation without logging anything.
+
+Returns 1 if a rotation was done, 0 otherwise. C<undef> on error.
+
+=cut
+
+sub rotate
+{
+	my $self = shift;
+	my ($hold_lock) = @_; # internal use only.
+
 	my $max_size = $self->{size};
 	my $numfiles = $self->{max};
-	my $name     = $self->{params}->{filename};
+	my $name     = $self->filename();
 	my $fh       = $self->{LDF}->{fh};
 
 	# Prime our time based data outside the critical code area
 	my ($in_time_mode,$time_to_rotate) = $self->time_to_rotate();
+
+	my $user_rotation = 0;
+	if (ref($self->{user_constraint}) eq 'CODE') {
+		eval {
+			$user_rotation = &{$self->{user_constraint}}();
+
+			1;
+		} or do {
+			$self->error("user's callback error: $@");
+		};
+	}
 
 	# Handle critical code for logging. No changes if someone else is in.  We
 	# lock a lockfile, not the actual log filehandle because locking doesn't
 	# work properly if the logfile was opened in a parent process for example.
 	my $lfh;
 	unless ($lfh = flopen($self->{lf})) {
-		warn "$$ Log::Dispatch::FileRotate failed to get lock: $!. Not logging.\n";
-		return;
+		$self->error("failed to get lock: $!");
+		return undef;
 	}
 
 	$self->debug("got lock");
 
 	my $have_to_rotate = 0;
-	my $size   = (stat($fh))[7];   # Stat the handle to get real size
-	my $inode  = (stat($fh))[1];   # get real inode
-	my $finode = (stat($name))[1]; # Stat the name for comparision
+	my ($inode, $size)   = (stat($fh))[1,7]; # real inode and size
+	my $finode = (stat($name))[1]; # inode of filename for comparision
 	$self->debug("s=$size, i=$inode, f=".
 			(defined $finode ? $finode : "undef") .
 			", n=$name");
@@ -329,7 +384,7 @@ sub log_message
 		delete $self->{LDF};  # Should get rid of current LDF
 		$self->{LDF} =  Log::Dispatch::File->new(%{$self->{params}});  # Our log
 
-		$self->debug("Someone else rotated: normal log");
+		$self->debug("Someone else rotated");
 	}
 	else
 	{
@@ -337,14 +392,15 @@ sub log_message
 		my $rotate_by_size = ($size >= $max_size) ? 1 : 0;
 		if(($in_time_mode && $time_to_rotate) ||
 		   (!$in_time_mode && $rotate_by_size) ||
-		   ($rotate_by_size && $check_both))
+		   ($rotate_by_size && $check_both) ||
+		   ($user_rotation))
 		{
 			$have_to_rotate = 1;
 		}
 
 		$self->debug("in time mode: $in_time_mode; time to rotate: $time_to_rotate;"
 			." rotate by size: $rotate_by_size; check_both: $check_both;"
-			." have to rotate: $have_to_rotate");
+			." user rotation: $user_rotation; have to rotate: $have_to_rotate");
 	}
 
 	if($have_to_rotate)
@@ -352,37 +408,61 @@ sub log_message
 		# Shut down the log
 		delete $self->{LDF};  # Should get rid of current LDF
 
-		my $idx = $numfiles -1;
-
 		$self->debug("Rotating");
-		while($idx >= 0)
-		{
-			if($idx <= 0)
-			{
-				$self->debug("rename $name $name.1");
-				rename($name, "$name.1");
-			}
-			else
-			{
-				$self->debug("rename $name.$idx $name.".($idx+1));
-				rename("$name.$idx", "$name.".($idx+1));
-			}
-
-			$idx--;
-		}
+		$self->_for_each_file(\&_move_file);
 		$self->debug("Rotating Done");
 
 		# reopen the logfile for writing.
 		$self->{LDF} =  Log::Dispatch::File->new(%{$self->{params}});  # Our log
 
-		# Write it out
-		$self->debug("rotated: normal log");
+		if (ref($self->{post_rotate}) eq 'CODE') {
+			$self->debug("Calling user post-rotate callback");
+			$self->_for_each_file($self->{post_rotate});
+		}
 	}
 
-	$self->logit($p{message});
+	return $lfh if ($hold_lock);
 
 	$self->debug("releasing lock");
-	safe_flock($lfh, LOCK_UN);
+	flclose($lfh);
+
+	return $have_to_rotate;
+}
+
+sub _for_each_file
+{
+	my $self = shift;
+	my ($callback) = @_;
+
+	my $basename = $self->filename();
+	my $idx = $self->{max} - 1;
+	while($idx >= 0)
+	{
+		my $filename = $basename;
+		$filename .= ".$idx" if ($idx);
+		eval {
+			&{$callback}($filename, $idx, $self) if (-f $filename);
+
+			1;
+		} or do {
+			$self->error("callback error: $@");
+		};
+		$idx--;
+	}
+
+	return undef;
+}
+
+sub _move_file
+{
+	my ($filename, $idx, $fileRotate) = @_;
+
+	my $basename = $fileRotate->filename();
+	my $newfile = $basename . '.' . ($idx+1);
+	$fileRotate->debug("rename $filename $newfile");
+	rename($filename, $newfile);
+
+	return undef;
 }
 
 sub DESTROY
@@ -746,6 +826,13 @@ sub flopen {
 	}
 }
 
+sub flclose {
+	my ($fh) = @_;
+
+	safe_flock($fh, LOCK_UN);
+	close($fh);
+}
+
 sub safe_flock {
 	my ($fh, $flags) = @_;
 
@@ -762,6 +849,12 @@ sub safe_flock {
 	}
 }
 
+=method debug($)
+
+If C<DEBUG> is true, prints a standard warning message.
+
+=cut
+
 sub debug
 {
 	my $self = shift;
@@ -772,6 +865,15 @@ sub debug
 	warn localtime() . " $$ $message\n";
 
 	return;
+}
+
+sub error
+{
+	my $self = shift;
+	my ($message)= @_;
+
+	chomp($message);
+	warn "$$ " . __PACKAGE__ . " $message\n";
 }
 
 __END__
@@ -802,64 +904,99 @@ __END__
 
 =head1 DESCRIPTION
 
-This module provides a simple object for logging to files under the
-Log::Dispatch::* system, and automatically rotating them according to
-different constraints. This is basically a Log::Dispatch::File wrapper
-with additions. To that end the arguments
+This module extends the base class L<Log::Dispatch::Output> to provides a
+simple object for logging to files under the Log::Dispatch::* system, and
+automatically rotating them according to different constraints. This is
+basically a L<Log::Dispatch::File> wrapper with additions.
 
-	name, min_level, filename and  mode
+=head2 Rotation
 
-behave the same as Log::Dispatch::File. So see its man page 
-(perldoc Log::Dispatch::File)
+There are three different constraints which decide when a file must be
+rotated.
 
-The arguments size and max specify the maximum size and maximum
-number of log files created. The size defaults to 10M and the max number
-of files defaults to 1. If DatePattern is not defined then we default to
-working in size mode. That is, use size values for deciding when to rotate.
+The first is by size: when the log file grows more the a specified
+size, then it's rotated.
 
-Once DatePattern is defined FileRotate will move into time mode. Once this
-happens file rotation ignores size constraints, unless check_both, and uses
-the defined date pattern constraints.
-
-If you setup a config file using Log::Log4perl::init_and_watch() or the
-like, you can switch between modes just by commenting out the DatePattern
-line.
-
-When using DatePattern make sure TZ is defined correctly and that the TZ
-you use is understood by Date::Manip. We use Date::Manip to generate our
-recurrences. Bad TZ equals bad recurrences equals surprises! Read the
-Date::Manip man page for more details on TZ.
-
-DatePattern will default to a daily rotate if your entered pattern is
+The second constraint is with occurrences. If a L</DatePattern> is defined, a
+file rotation ignores size constraint (unless C<check_both>) and uses the
+defined date pattern constraints. When using L</DatePattern> make sure TZ is
+defined correctly and that the TZ you use is understood by Date::Manip. We use
+Date::Manip to generate our recurrences. Bad TZ equals bad recurrences equals
+surprises! Read the L<Date::Manip> man page for more details on
+TZ. L</DatePattern> will default to a daily rotate if your entered pattern is
 incorrect. You will also get a warning message.
+
+You can also check both constraints together by using the C<check_both>
+parameter.
+
+The latter constraint is a user callback. This function is called outside the
+restricted area (see L</Concurrency>) and,
+if it returns a true value, a rotation will happen unconditionally.
+
+All check are made before logging. The C<rotate> method leaves us check these
+constraints without logging anything.
+
+To let more power at the user, a C<post_rotate> callback it'll call after every
+rotation.
+
+=head2 Concurrency
+
+Multiple writers are allowed by this module. There is a restricted area where
+only one writer can be inside. This is done by using an external lock file,
+which name is "C<.filename.LCK>" (never deleted).
+
+The user constraint and the L</DatePattern> constraint are checked outside this
+restricted area. So, when you write a callback, don't rely on the logging
+file because it can disappear under your feet.
+
+Within this restricted area we:
+
+=over 4
+
+=item *
+
+check the size constraint;
+
+=item *
+
+eventually rotate the log file;
+
+=item *
+
+if it's defined, call the C<post_rotate> function;
+
+=item *
+
+write the log message;
+
+=back
+
+=head1 Tip
 
 If you have multiple writers that were started at different times you
 will find each writer will try to rotate the log file at a recurrence
 calculated from its start time. To sync all the writers just use a config
 file and update it after starting your last writer. This will cause
-Log::Dispatch::FileRotate->new() to be called by each of the writers
+C<new()> to be called by each of the writers
 close to the same time, and if your recurrences aren't too close together
 all should sync up just nicely.
 
 I initially assumed a long running process but it seems people are using
 this module as part of short running CGI programs. So, now we look at the
 last modified time stamp of the log file and compare it to a previous
-occurance of a DatePattern, on startup only. If the file stat shows
+occurance of a L</DatePattern>, on startup only. If the file stat shows
 the mtime to be earlier than the previous recurrance then I rotate the
 log file.
 
-We handle multiple writers using flock().
-
 =head1 DatePattern
 
-As I said earlier we use Date::Manip for generating our recurrence
-events. This means we can understand Date::Manip's recurrence patterns
+As I said earlier we use L<Date::Manip> for generating our recurrence
+events. This means we can understand L<Date::Manip>'s recurrence patterns
 and the normal log4j DatePatterns. We don't use DatePattern to define the
 extension of the log file though.
 
 DatePattern can therefore take forms like:
 
-	
       Date::Manip style
             0:0:0:0:5:30:0       every 5 hours and 30 minutes
             0:0:0:2*12:30:0      every 2 days at 12:30 (each day)
@@ -880,7 +1017,7 @@ semicolon:
 This says we want to rotate every day AND every 2 days at 12:30. Put in
 as many as you like.
 
-A complete description of Date::Manip recurrences is beyond us here
+A complete description of L<Date::Manip> recurrences is beyond us here
 except to quote (from the man page):
 
            A recur description is a string of the format
@@ -912,7 +1049,7 @@ except to quote (from the man page):
 
 compression, signal based rotates, proper test suite
 
-Could possibly use Logfile::Rotate as well/instead.
+Could possibly use L<Logfile::Rotate> as well/instead.
 
 =head1 SEE ALSO
 
