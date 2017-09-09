@@ -1,6 +1,8 @@
 Revision history for Perl extension Log::Dispatch::FileRotate.
 
 {{$NEXT}}
+    - Fix possible deadlock if a $SIG{__WARN__} handler is installed that logs
+      to Log::Dispatch::FileRotate and log_message issues a warning.
 
 1.30 Thu Aug 03 2017
     - Docs: fix synopsis usage to "name" (incorrect) instead of filename

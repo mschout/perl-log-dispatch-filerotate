@@ -312,18 +312,39 @@ sub log_message
     my $self = shift;
     my %p = @_;
 
-    my $lfh = $self->rotate(1);
-    if(!defined($lfh)) {
-      $self->error("not logging");
-      return;
+    # we store the lock file handle in {lfh}, and only call rotate() if we do
+    # not currently have the lock file handle open already.
+    # This protects us against the case where log_message() gets called while
+    # we are inside log_message() (e.g.: via a $SIG{__WARN__} handler and, and
+    # log_message() itself issues a warning).  In this case, calling rotate()
+    # while we have the lockfile handle open and locked would deadlock.
+    # {_depth} is also used here so that we only release the lock when the
+    # original log_message() is complete.
+    unless (defined $self->{lfh}) {
+        $self->{lfh} = $self->rotate(1);
+
+        unless (defined $self->{lfh}) {
+            $self->error("not logging");
+            return;
+        }
     }
+
+    $self->{_depth} += 1;
+
     $self->debug("normal log");
 
     $self->logit($p{message});
 
     $self->debug("releasing lock");
-    flclose($lfh);
+
+    $self->{_depth} -= 1;
+
+    if ($self->{_depth} == 0) {
+        flclose($self->{lfh});
+        delete $self->{lfh};
+    }
 }
+
 
 =method rotate()
 
