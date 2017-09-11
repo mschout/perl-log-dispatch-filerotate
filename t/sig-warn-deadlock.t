@@ -69,7 +69,7 @@ else {
     pass $desc;
 }
 
-open my $fh, $logfile or die "cannot open $logfile: $!";
+open my $fh, '<', $logfile or die "cannot open $logfile: $!";
 
 # first line in the file should be the warning
 my $line = <$fh>;
