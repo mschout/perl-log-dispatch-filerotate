@@ -23,49 +23,45 @@ Params::Validate::validation_options( allow_extra => 1 );
 The constructor takes the following parameters in addition to parameters
 documented in L<Log::Dispatch::File>:
 
-=over 4
+=begin :list
 
-=item -- max ($)
-
+= max ($)
 The maximum number of log files to create. Default 1.
 
-=item -- size ($)
-
+= size ($)
 The maximum (or close to) size the log file can grow too. Default 10M.
 
-=item -- DatePattern ($)
-
+= DatePattern ($)
 The L</DatePattern> as defined above.
 
-=item -- TZ ($)
-
+= TZ ($)
 The TimeZone time based calculations should be done in. This should match
 L<Date::Manip>'s concept of timezones and of course your machines timezone.
 
-=item -- check_both ($)
+= check_both ($)
+1 for checking L</DatePattern> and size concurrently, 0 otherwise.  Default 0.
 
-1 for checking L</DatePattern> and size concurrently, 0 otherwise (the default).
-
-=item -- user_constraint (\&)
-
+= user_constraint (\&)
 If this callback is defined and returns true, a rotation will happen
 unconditionally.
 
-=item -- post_rotate (\&)
-
+= post_rotate (\&)
 This callback is called after that all files were rotated. Will be called one
 time for every rotated file (in reverse order) with this arguments:
 
-=over 4
+=begin :list
 
-C<filename>: the path of the rotated file;
+= C<filename>
+the path of the rotated file
 
-C<index>: the index of the rotated file from C<max>-1 to 0, in the latter
-case C<filename> is the new, empty, log file;
+= C<index>
+the index of the rotated file from C<max>-1 to 0, in the latter case
+C<filename> is the new, empty, log file
 
-C<fileRotate>: a object reference to this instance;
+= C<fileRotate>
+a object reference to this instance
 
-=back
+=end :list
 
 With this, you can have infinite files renaming each time the rotated file
 log. E.g:
@@ -91,12 +87,11 @@ means that any other concurrent process is locked in the meanwhile. For the
 same reason, don't use the C<log()> or C<log_message()> methods because you
 will get a deadlock!
 
-=item -- DEBUG ($)
-
+= DEBUG ($)
 Turn on lots of warning messages to STDERR about what this module is
 doing if set to 1. Really only useful to me.
 
-=back
+=end :list
 
 =cut
 
@@ -973,25 +968,11 @@ file because it can disappear under your feet.
 
 Within this restricted area we:
 
-=over 4
-
-=item *
-
-check the size constraint;
-
-=item *
-
-eventually rotate the log file;
-
-=item *
-
-if it's defined, call the C<post_rotate> function;
-
-=item *
-
-write the log message;
-
-=back
+=for :list
+* check the size constraint
+* eventually rotate the log file
+* if it's defined, call the C<post_rotate> function
+* write the log message
 
 =head1 Tip
 
@@ -1075,13 +1056,9 @@ Could possibly use L<Logfile::Rotate> as well/instead.
 
 =head1 SEE ALSO
 
-=over 4
-
-=item *
-
-L<Log::Dispatch::File::Stamped> - log directly to timestamped files
-
-=back
+=for :list
+* L<Log::Dispatch::File::Stamped>
+Log directly to timestamped files.
 
 =head1 HISTORY
 
