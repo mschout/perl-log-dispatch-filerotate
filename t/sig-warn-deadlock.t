@@ -19,7 +19,7 @@ if ($] < 5.008000) {
     plan skip_all => 'This test requires Perl 5.8.0 or later';
 }
 
-plan tests => 7;
+plan tests => 10;
 
 use_ok 'Log::Dispatch';
 use_ok 'Log::Dispatch::FileRotate';
@@ -54,7 +54,7 @@ eval {
     alarm 10;
 
     # "warning" in chinese, at least according to google translate.
-    $dispatcher->info("\x{8b66}\x{544a}");
+    $dispatcher->info("1: \x{8b66}\x{544a}");
 
     alarm 0;
 };
@@ -78,4 +78,43 @@ like $line, qr/Wide character in print/;
 # next line should be the UTF-8 string
 $line = <$fh>;
 chomp $line;
-is decode('UTF-8', $line), "\x{8b66}\x{544a}";
+is decode('UTF-8', $line), "1: \x{8b66}\x{544a}";
+
+# test scenario where we have a different dispatcher instance in the __WARN__
+# handler, but logging to the same file.
+my $warn_dispatcher = Log::Dispatch->new;
+isa_ok $warn_dispatcher, 'Log::Dispatch';
+
+# we need to make sure we do not turn on utf8 mode here so that we can trigger
+# the "Wide character in print" warning.
+my $warn_logger = Log::Dispatch::FileRotate->new(
+    filename    => $logfile,
+    min_level   => 'debug',
+    mode        => 'append',
+    max         => 5,
+    newline     => 0,
+    DatePattern => 'YYYY-dd-HH');
+
+isa_ok $warn_logger, 'Log::Dispatch::FileRotate';
+
+$warn_dispatcher->add($warn_logger);
+
+$SIG{__WARN__} = sub { $warn_dispatcher->warn(@_) };
+
+eval {
+    alarm 10;
+
+    $dispatcher->info("2: \x{8b66}\x{544a}");
+
+    alarm 0;
+};
+if ($@) {
+    diag $@ =~ /^timeout/
+        ? 'deadlock detected'
+        : "error: $@";
+
+    fail $desc;
+}
+else {
+    pass $desc;
+}

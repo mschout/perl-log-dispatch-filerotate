@@ -1,8 +1,13 @@
 Revision history for Perl extension Log::Dispatch::FileRotate.
 
 {{$NEXT}}
-    - Fix possible deadlock if a $SIG{__WARN__} handler is installed that logs
-      to Log::Dispatch::FileRotate and log_message issues a warning.
+    - We now use a a global Mutex object for each open file that gracefully
+      handles locking between threads and across forks.  This fixes the
+      following deadlock scenarios:
+        - a $SIG{__WARN__} handler is installed that logs to
+          Log::Dispatch::FileRotate and log_message issues a warning.
+        - multiple dispatchers are in logit() at the same time.
+    - Abstract locking functions into Log::Dispatch::FileRotoate::Flock module.
     - Various pod cleanups and enhancements (Thanks Emanuele Tomasi)
     - Avoid multiple stat() calls on the same filehandle (Thanks Emanuele Tomasi)
     - Add user_constraint option to use a custom function to determine when

@@ -10,10 +10,10 @@ use Log::Dispatch::Output;
 use base qw( Log::Dispatch::Output );
 
 use Log::Dispatch::File;   # We are a wrapper around Log::Dispatch::File
+use Log::Dispatch::FileRotate::Mutex;
 
 use Date::Manip;  # For time based recurring rotations
 use File::Spec;   # For file-names
-use Fcntl ':flock'; # import LOCK_* constants
 
 use Params::Validate qw(validate SCALAR BOOLEAN);
 Params::Validate::validation_options( allow_extra => 1 );
@@ -307,24 +307,12 @@ sub log_message
     my $self = shift;
     my %p = @_;
 
-    # we store the lock file handle in {lfh}, and only call rotate() if we do
-    # not currently have the lock file handle open already.
-    # This protects us against the case where log_message() gets called while
-    # we are inside log_message() (e.g.: via a $SIG{__WARN__} handler and, and
-    # log_message() itself issues a warning).  In this case, calling rotate()
-    # while we have the lockfile handle open and locked would deadlock.
-    # {_depth} is also used here so that we only release the lock when the
-    # original log_message() is complete.
-    unless (defined $self->{lfh}) {
-        $self->{lfh} = $self->rotate(1);
+    my $mutex = $self->rotate(1);
 
-        unless (defined $self->{lfh}) {
-            $self->error("not logging");
-            return;
-        }
+    unless (defined $mutex) {
+        $self->error('not logging');
+        return;
     }
-
-    $self->{_depth} += 1;
 
     $self->debug("normal log");
 
@@ -332,12 +320,7 @@ sub log_message
 
     $self->debug("releasing lock");
 
-    $self->{_depth} -= 1;
-
-    if ($self->{_depth} == 0) {
-        flclose($self->{lfh});
-        delete $self->{lfh};
-    }
+    $mutex->unlock;
 }
 
 
@@ -375,12 +358,13 @@ sub rotate
     }
 
     # Handle critical code for logging. No changes if someone else is in.  We
-    # lock a lockfile, not the actual log filehandle because locking doesn't
-    # work properly if the logfile was opened in a parent process for example.
-    my $lfh;
-    unless ($lfh = flopen($self->{lf})) {
+    # lock a lockfile, not the actual log filehandle since the log filehandle
+    # will change if we rotate the logs.
+    my $mutex = $self->mutex_for_path($self->{lf});
+
+    unless ($mutex->lock) {
         $self->error("failed to get lock: $!");
-        return undef;
+        return;
     }
 
     $self->debug("got lock");
@@ -437,10 +421,11 @@ sub rotate
         }
     }
 
-    return $lfh if ($hold_lock);
+    if ($hold_lock) {
+        return $mutex;
+    }
 
-    $self->debug("releasing lock");
-    flclose($lfh);
+    $mutex->unlock;
 
     return $have_to_rotate;
 }
@@ -501,6 +486,15 @@ sub logit
     return;
 }
 
+{
+    my %MUTEXES;
+
+    sub mutex_for_path {
+        my ($self, $path) = @_;
+
+        $MUTEXES{$path} ||= Log::Dispatch::FileRotate::Mutex->new($path);
+    }
+}
 
 ###########################################################################
 #
@@ -774,12 +768,13 @@ sub lock
 {
     my $self = shift;
 
-    safe_flock($self->{LDF}->{fh},LOCK_EX);
+    $self->mutex_for_path($self->filename)->lock;
 
     # Make sure we are at the EOF
-    seek($self->{LDF}->{fh}, 0, 2);
+    seek $self->{LDF}{fh}, 0, 2;
 
     $self->debug("Locked");
+
     return;
 }
 
@@ -787,83 +782,9 @@ sub unlock
 {
     my $self = shift;
 
-    safe_flock($self->{LDF}->{fh},LOCK_UN);
+    $self->mutex_for_path($self->filename)->unlock;
+
     $self->debug("unLocked");
-}
-
-# Inspired by BSD's flopen(), returns filehandle on success
-sub flopen {
-    my $path = shift;
-
-    my $flags = LOCK_EX;
-
-    my $fh;
-
-    while (1) {
-        unless (open $fh, '>>', $path) {
-            return;
-        }
-
-        unless (safe_flock($fh, $flags)) {
-            return;
-        }
-
-        my @path_stat = stat $path;
-        unless (@path_stat) {
-            # file disappeared fron under our feet
-            close $fh;
-            next;
-        }
-
-        my @fh_stat = stat $fh;
-        unless (@fh_stat) {
-            # This should never happen
-            return;
-        }
-
-        unless ($^O =~ /^MSWin/) {
-            # stat on a filehandle and path return different "dev" and "rdev"
-            # fields on windows
-            if ($path_stat[0] != $fh_stat[0]) {
-                # file was changed under our feet. try again;
-                close $fh;
-                next;
-            }
-        }
-
-        # check that device and inode are the same for the path and fh
-        if ($path_stat[1] != $fh_stat[1])
-        {
-            # file was changed under our feet. try again;
-            close $fh;
-            next;
-        }
-
-        return $fh;
-    }
-}
-
-sub flclose {
-    my ($fh) = @_;
-
-    safe_flock($fh, LOCK_UN);
-    close($fh);
-}
-
-sub safe_flock {
-    my ($fh, $flags) = @_;
-
-    while (1) {
-        unless (flock $fh, $flags) {
-            # retry if we were interrupted or we are in non-blocking and the file is locked
-            next if $!{EAGAIN} or $!{EWOULDBLOCK};
-
-            return 0;
-        }
-        else {
-            return 1;
-        }
-    }
 }
 
 =method debug($)
@@ -892,6 +813,8 @@ sub error
     chomp($message);
     warn "$$ " . __PACKAGE__ . " $message\n";
 }
+
+1;
 
 __END__
 
