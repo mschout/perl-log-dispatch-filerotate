@@ -8,6 +8,9 @@ Revision history for Perl extension Log::Dispatch::FileRotate.
           Log::Dispatch::FileRotate and log_message issues a warning.
         - multiple dispatchers are in logit() at the same time.
     - Abstract locking functions into Log::Dispatch::FileRotoate::Flock module.
+    - Remove flock()'ing of the logfile filehandle.  Rely on the lock that
+      we hold on the "lockfile" instead to synchronize writes. [Github #12]
+      holding a lock on the lockfile when writing the log message.
     - Various pod cleanups and enhancements (Thanks Emanuele Tomasi)
     - Avoid multiple stat() calls on the same filehandle (Thanks Emanuele Tomasi)
     - Add user_constraint option to use a custom function to determine when

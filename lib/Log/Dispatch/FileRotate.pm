@@ -471,11 +471,10 @@ sub _move_file {
 sub logit {
     my ($self, $message) = @_;
 
-    $self->lock();
+    # Make sure we are at the EOF
+    seek $self->{LDF}{fh}, 0, 2;
 
     $self->{LDF}->log_message(message => $message);
-
-    $self->unlock();
 
     return;
 }
@@ -747,28 +746,6 @@ sub _get_next_occurance {
     }
 
     return shift @{$self->{'dates'}{$pat}};
-}
-
-# Lock and unlock routines. For when we need to write a message.
-sub lock {
-    my $self = shift;
-
-    $self->mutex_for_path($self->filename)->lock;
-
-    # Make sure we are at the EOF
-    seek $self->{LDF}{fh}, 0, 2;
-
-    $self->debug("Locked");
-
-    return;
-}
-
-sub unlock {
-    my $self = shift;
-
-    $self->mutex_for_path($self->filename)->unlock;
-
-    $self->debug("unLocked");
 }
 
 =method debug($)
