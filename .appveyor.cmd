@@ -27,7 +27,6 @@ if "%perl_type%" == "cygwin" (
 for /f "usebackq delims=" %%d in (`perl -MConfig -e"print $Config{make}"`) do set make=%%d
 set "perl=perl"
 set "cpanm=call .appveyor.cmd cpanm"
-set "dzil=call .appveyor.cmd dzil"
 set "cpan=%perl% -S cpan"
 set TAR_OPTIONS=--warning=no-unknown-keyword
 goto :eof
@@ -42,15 +41,6 @@ if ERRORLEVEL 1 (
 )
 set "cpanm=%perl% -S cpanm"
 %cpanm% %*
-goto :eof
-
-:dzil
-%perl% -S dzil >NUL 2>&1
-if ERRORLEVEL 1 (
-  %cpanm% --quiet --notest --skip-satisfied Dist::Zilla
-)
-set "dzil=%perl% -S dzil"
-%dzil% %*
 goto :eof
 
 :eof
