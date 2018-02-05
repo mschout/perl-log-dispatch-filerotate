@@ -1,0 +1,21 @@
+---
+clone_folder: C:\projects\perl-log-dispatch-filerotate
+
+cache:
+  - C:\strawberry
+
+install:
+  - if not exist "C:\tmp" mkdir C:\tmp
+  - if not exist "C:\strawberry" cinst strawberryperl
+  - set PATH=C:\strawberry\perl\bin;C:\strawberry\perl\site\bin;C:\strawberry\c\bin;%PATH%
+  - cd C:\projects\perl-log-dispatch-filerotate
+  - git config --global user.name "AppVeyor"
+  - git config --global user.email "appveyor-not-for-mail@appveyor.com"
+  - cpanm --quiet --notest --skip-satisfied Dist::Zilla
+  - dzil authordeps --missing | cpanm --quiet --notest
+  - dzil listdeps --missing | cpanm --verbose
+
+build: off
+
+test_script:
+  - dzil smoke --release --author
