@@ -16,6 +16,7 @@ install:
   - if not exist "C:\tmp" mkdir C:\tmp
   - 'call .appveyor.cmd perl_setup'
   - '%perl% -V'
+  - '%cpanm%'
   - '%dzil% authordeps --missing | %cpanm% --quiet --notest'
   - '%dzil% listdeps --missing | %cpanm% --verbose'
   - cd C:\projects\perl-log-dispatch-filerotate
