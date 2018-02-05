@@ -4,11 +4,9 @@ clone_folder: C:\projects\perl-log-dispatch-filerotate
 cache:
   - C:\strawberry
   - C:\cygwin
-  - C:\dmake
 
 environment:
   matrix:
-    - perl_type: system
     - perl_type: strawberry
     - perl_type: cygwin
 
