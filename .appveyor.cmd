@@ -35,6 +35,7 @@ set "dzil=%perl% -S dzil"
 set TAR_OPTIONS=--warning=no-unknown-keyword
 set PERL_MM_USE_DEFAULT=1
 set PERL_USE_UNSAFE_INC=1
+set TZ=UTC
 goto :eof
 
 :cpanm
