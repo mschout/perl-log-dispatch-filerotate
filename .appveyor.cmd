@@ -31,6 +31,7 @@ for /f "usebackq delims=" %%d in (`perl -MConfig -e"print $Config{make}"`) do se
 set "perl=perl"
 set "cpanm=call .appveyor.cmd cpanm"
 set "cpan=%perl% -S cpan"
+set "dzil=%perl% -S dzil"
 set TAR_OPTIONS=--warning=no-unknown-keyword
 set PERL_MM_USE_DEFAULT=1
 set PERL_USE_UNSAFE_INC=1
