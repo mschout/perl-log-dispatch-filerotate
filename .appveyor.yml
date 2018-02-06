@@ -13,8 +13,8 @@ environment:
 install:
   - 'call .appveyor.cmd perl_setup'
   - '%perl% -V'
-  - '%cpanm% --quiet --notest --skip-satisfied Dist::Zilla'
-  - 'dzil authordeps --missing | %cpanm% --quiet --notest'
+  - '%cpanm% --verbose --notest --skip-satisfied Dist::Zilla'
+  - 'dzil authordeps --missing | %cpanm% --verbose --notest'
   - 'dzil listdeps --missing | %cpanm% --verbose'
   - git config --global user.name "AppVeyor"
   - git config --global user.email "appveyor-not-for-mail@appveyor.com"
