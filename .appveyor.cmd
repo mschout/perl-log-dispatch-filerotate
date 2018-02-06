@@ -29,6 +29,8 @@ set "perl=perl"
 set "cpanm=call .appveyor.cmd cpanm"
 set "cpan=%perl% -S cpan"
 set TAR_OPTIONS=--warning=no-unknown-keyword
+set PERL_MM_USE_DEFAULT=1
+set PERL_USE_UNSAFE_INC=1
 goto :eof
 
 :cpanm
