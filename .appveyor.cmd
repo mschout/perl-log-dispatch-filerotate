@@ -3,9 +3,10 @@ call :%*
 goto :eof
 
 :perl_setup
+if not exist "c:\tmp" mkdir c:\tmp
 if not defined perl_type set perl_type=system
 if "%perl_type%" == "cygwin" (
-  start /wait c:\cygwin\setup-x86.exe -q -P perl make gcc gcc-g++ libcrypt-devel
+  start /wait c:\cygwin\setup-x86.exe -q -P perl -P make -P gcc -P gcc-g++ -P libcrypt-devel
   set "PATH=C:\cygwin\usr\local\bin;C:\cygwin\bin;%PATH%"
 ) else if "%perl_type%" == "strawberry" (
   if not defined perl_version (

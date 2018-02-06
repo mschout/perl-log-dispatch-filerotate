@@ -11,13 +11,11 @@ environment:
     - perl_type: strawberry
 
 install:
-  - if not exist "C:\tmp" mkdir C:\tmp
   - 'call .appveyor.cmd perl_setup'
   - '%perl% -V'
   - '%cpanm% --quiet --notest --skip-satisfied Dist::Zilla'
   - 'dzil authordeps --missing | %cpanm% --quiet --notest'
   - 'dzil listdeps --missing | %cpanm% --verbose'
-  - cd C:\projects\perl-log-dispatch-filerotate
   - git config --global user.name "AppVeyor"
   - git config --global user.email "appveyor-not-for-mail@appveyor.com"
 
