@@ -8,7 +8,7 @@ if not defined perl_type set perl_type=system
 if "%perl_type%" == "cygwin" (
   start /wait c:\cygwin\setup-x86.exe -q -P perl -P make -P gcc -P gcc-g++ -P libcrypt-devel
   set "PATH=C:\cygwin\usr\local\bin;C:\cygwin\bin;%PATH%"
-  set "PERL_MM_OPT=CCFLAGS='-fno-stack-protector -I.' CPPFLAGS='-fno-stack-protector -I.'"
+  set "PERL_MM_OPT=CCFLAGS='-fno-stack-protector -I.' CXXFLAGS='-fno-stack-protector -I.'"
 ) else if "%perl_type%" == "strawberry" (
   if not defined perl_version (
     cinst -y StrawberryPerl
