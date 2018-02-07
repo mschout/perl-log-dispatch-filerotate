@@ -72,7 +72,7 @@ sub run_processes {
         if ($msg =~ /got lock/ or $msg =~ /releasing/) {
             # strip off dates and pid numbers from front of message
             $msg = substr($msg, 25);
-            $msg =~ s/^[0-9]+ //;
+            $msg =~ s/^-?[0-9]+ //;
 
             # save in the warnings file
             print $warnfh $msg;
