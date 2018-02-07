@@ -30,7 +30,7 @@ unless ($curloc eq $locale) {
     plan skip_all => "locale $locale is not available on this system";
 }
 
-use_ok 'Log::Dispatch::FileRotate';
+use Log::Dispatch::FileRotate;
 
 my $tempdir = Path::Tiny->tempdir;
 

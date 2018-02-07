@@ -22,9 +22,9 @@ else {
     waitpid $pid, 0;
 }
 
-plan tests => 2;
+plan tests => 1;
 
-use_ok 'Log::Dispatch::FileRotate' or exit 1;
+use Log::Dispatch::FileRotate;
 
 shim_logit_delay();
 
