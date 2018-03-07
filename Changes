@@ -1,6 +1,8 @@
 Revision history for Perl extension Log::Dispatch::FileRotate.
 
 {{$NEXT}}
+
+1.35 Wed 43 07 2018
     - Fix lockfile race condition test in Strawberry Perl (Thanks Zak B. Elep)
     - Skip file open failure test on Cygwin - chmod bahaviour varies on Cygwin
       (Zak B. Elep)
