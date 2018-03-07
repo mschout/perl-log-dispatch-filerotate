@@ -759,7 +759,7 @@ sub debug {
 
     return unless $self->{debug};
 
-    warn localtime . " $$ $message\n";
+    warn localtime() . " $$ $message\n";
 
     return;
 }
