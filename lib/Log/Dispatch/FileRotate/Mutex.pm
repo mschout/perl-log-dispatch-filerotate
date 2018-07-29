@@ -98,7 +98,7 @@ sub lock {
         }
     }
 
-    # otherwise this $pid is alraedy holding the lock
+    # otherwise this $pid is already holding the lock
 
     return $self->{$pid} || 0;
 }
