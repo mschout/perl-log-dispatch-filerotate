@@ -485,7 +485,14 @@ sub logit {
     sub mutex_for_path {
         my ($self, $path) = @_;
 
-        $MUTEXES{$path} ||= Log::Dispatch::FileRotate::Mutex->new($path);
+        my %args;
+
+        # use same permissions for the Mutex file
+        if (exists $self->{params}{permissions}) {
+            $args{permissions} = $self->{params}{permissions};
+        }
+
+        $MUTEXES{$path} ||= Log::Dispatch::FileRotate::Mutex->new($path, %args);
     }
 }
 
