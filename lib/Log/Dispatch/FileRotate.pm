@@ -819,7 +819,7 @@ basically a L<Log::Dispatch::File> wrapper with additions.
 There are three different constraints which decide when a file must be
 rotated.
 
-The first is by size: when the log file grows more the a specified
+The first is by size: when the log file grows more than a specified
 size, then it's rotated.
 
 The second constraint is with occurrences. If a L</DatePattern> is defined, a
