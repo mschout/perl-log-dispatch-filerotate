@@ -1,6 +1,7 @@
 Revision history for Perl extension Log::Dispatch::FileRotate.
 
 {{$NEXT}}
+    - Improve synopsis showing how to use it with Log::Dispatch [Github #23]
 
 1.36 Sun 24 29 2018
     - If the "permissions" param is set, use the same permissions for the lock
