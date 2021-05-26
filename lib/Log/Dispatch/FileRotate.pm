@@ -787,7 +787,7 @@ __END__
 
   use Log::Dispatch::FileRotate;
 
-  my $file = Log::Dispatch::FileRotate->new(
+  my $logger = Log::Dispatch::FileRotate->new(
       name      => 'file1',
       min_level => 'info',
       filename  => 'Somefile.log',
@@ -797,7 +797,7 @@ __END__
 
   # or for a time based rotation
 
-  my $file = Log::Dispatch::FileRotate->new(
+  my $logger = Log::Dispatch::FileRotate->new(
       name      => 'file1',
       min_level => 'info',
       filename  => 'Somefile.log',
@@ -805,7 +805,11 @@ __END__
       TZ        => 'AEDT',
       DatePattern => 'yyyy-dd-HH');
 
-  $file->log( level => 'info', message => "your comment\n" );
+  # and attach to Log::Dispatch
+  my $dispatcher = Log::Dispatch->new;
+  $dispatcher->add($logger);
+
+  $dispatcher->log( level => 'info', message => "your comment\n" );
 
 =head1 DESCRIPTION
 
