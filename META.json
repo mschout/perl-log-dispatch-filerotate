@@ -65,15 +65,15 @@
    "provides" : {
       "Log::Dispatch::FileRotate" : {
          "file" : "lib/Log/Dispatch/FileRotate.pm",
-         "version" : "1.37"
+         "version" : "1.38"
       },
       "Log::Dispatch::FileRotate::Flock" : {
          "file" : "lib/Log/Dispatch/FileRotate/Flock.pm",
-         "version" : "1.37"
+         "version" : "1.38"
       },
       "Log::Dispatch::FileRotate::Mutex" : {
          "file" : "lib/Log/Dispatch/FileRotate/Mutex.pm",
-         "version" : "1.37"
+         "version" : "1.38"
       }
    },
    "release_status" : "stable",
@@ -88,7 +88,7 @@
          "web" : "https://github.com/mschout/perl-log-dispatch-filerotate"
       }
    },
-   "version" : "1.37",
+   "version" : "1.38",
    "x_generated_by_perl" : "v5.30.3",
    "x_serialization_backend" : "Cpanel::JSON::XS version 4.19",
    "x_spdx_expression" : "Artistic-1.0-Perl OR GPL-1.0-or-later"
