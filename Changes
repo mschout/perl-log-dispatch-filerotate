@@ -1,6 +1,7 @@
 Revision history for Perl extension Log::Dispatch::FileRotate.
 
 {{$NEXT}}
+    - No Changes other than SIGNATURE, v1.37 was missing SIGNATURE
 
 1.37 Wed 58 26 2021
     - Improve synopsis showing how to use it with Log::Dispatch [Github #23]
