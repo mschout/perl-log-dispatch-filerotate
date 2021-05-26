@@ -1,6 +1,7 @@
 Revision history for Perl extension Log::Dispatch::FileRotate.
 
 {{$NEXT}}
+    - Improve synopsis showing how to use it with Log::Dispatch [Github #23]
     - Bump minimum version of Log::Dispatch to v2.59 to address minimum
       List::Util indirect dependency via Specio [Github #26]
 
